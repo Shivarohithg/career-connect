@@ -5,9 +5,9 @@ function Navbar() {
     return (
         <nav className={styles.navbar}>
 
-            <h2 className={styles.logo}>
-                CareerConnect
-            </h2>
+        <h2 className={styles.logo}>
+           Career<span>Connect</span>
+        </h2>
 
             <ul className={styles.navLinks}>
 
