@@ -26,7 +26,7 @@ function Features() {
 
   return (
     <section className={styles.features}>
-      <h2>Why Choose CareerConnect?</h2>
+      <h2>Why Choose CareerConnect AI Platform?</h2>
 
       <div className={styles.cards}>
         {Features.map((feature, index) => (
@@ -40,13 +40,11 @@ function Features() {
         ))}
       </div>
 
-      <h2>Why Choose CareerConnect?</h2>
+      
 
       <p className={styles.subtitle}>
-        
-        Everything you need to prepare, apply and succeed in your placement
-        journey.
-
+        Experience AI-powered placement preparation, resume analysis, interview
+        coaching, and smart job recommendations—all in one platform.
       </p>
     </section>
   );
