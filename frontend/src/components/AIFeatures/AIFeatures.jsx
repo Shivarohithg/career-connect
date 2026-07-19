@@ -1,32 +1,34 @@
 import styles from "./AIFeatures.module.css";
+import {
+  FaRobot,
+  FaBullseye,
+  FaComments,
+  FaChartLine,
+} from "react-icons/fa";
 
 function AIFeatures() {
-  const aiFeatures = [
-    {
-      icon: "🤖",
-      title: "AI Resume Analyzer",
-      description:
-        "Upload your resume and receive AI-powered suggestions to improve its quality.",
-    },
-    {
-      icon: "🎯",
-      title: "AI Job Recommendation",
-      description:
-        "Get personalized job recommendations based on your skills and profile.",
-    },
-    {
-      icon: "💬",
-      title: "AI Interview Coach",
-      description:
-        "Practice interview questions generated specifically for your desired role.",
-    },
-    {
-      icon: "📈",
-      title: "Career Insights",
-      description:
-        "Receive personalized learning recommendations to strengthen your career path.",
-    },
-  ];
+const aiFeatures = [
+  {
+    icon: <FaRobot />,
+    title: "AI Resume Analyzer",
+    description: "...",
+  },
+  {
+    icon: <FaBullseye />,
+    title: "AI Job Recommendations",
+    description: "...",
+  },
+  {
+    icon: <FaComments />,
+    title: "AI Interview Coach",
+    description: "...",
+  },
+  {
+    icon: <FaChartLine />,
+    title: "Career Insights",
+    description: "...",
+  },
+];
 
   return (
     <section className={styles.aiSection}>

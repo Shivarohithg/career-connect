@@ -2,6 +2,7 @@ import Hero from "../../components/Hero/Hero";
 import Features from "../../components/Features/Features";
 import Companies from "../../components/Companies/Companies";
 import AIFeatures from "../../components/AIFeatures/AIFeatures";
+import Statistics from "../../components/Statistics/Statistics";
 
 function Home() {
   return (
@@ -10,6 +11,7 @@ function Home() {
       <Features />
       <Companies />
       <AIFeatures />
+      <Statistics />
     </>
   );
 }
