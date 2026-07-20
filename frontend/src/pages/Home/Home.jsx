@@ -3,6 +3,7 @@ import Features from "../../components/Features/Features";
 import Companies from "../../components/Companies/Companies";
 import AIFeatures from "../../components/AIFeatures/AIFeatures";
 import Statistics from "../../components/Statistics/Statistics";
+import CTA from "../../components/CTA/CTA";
 
 function Home() {
   return (
@@ -12,6 +13,7 @@ function Home() {
       <Companies />
       <AIFeatures />
       <Statistics />
+      <CTA />
     </>
   );
 }
