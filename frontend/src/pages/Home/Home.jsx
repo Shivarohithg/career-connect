@@ -4,6 +4,7 @@ import Companies from "../../components/Companies/Companies";
 import AIFeatures from "../../components/AIFeatures/AIFeatures";
 import Statistics from "../../components/Statistics/Statistics";
 import CTA from "../../components/CTA/CTA";
+import Footer from "../../components/Footer/Footer";
 
 function Home() {
   return (
@@ -14,6 +15,7 @@ function Home() {
       <AIFeatures />
       <Statistics />
       <CTA />
+      <Footer />
     </>
   );
 }
