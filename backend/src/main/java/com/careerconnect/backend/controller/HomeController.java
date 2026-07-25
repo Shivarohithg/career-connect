@@ -2,13 +2,19 @@ package com.careerconnect.backend.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.careerconnect.backend.model.Student;
+import com.careerconnect.backend.service.StudentService;
+
 
 @RestController
 public class HomeController {
+
+    @Autowired
+    private StudentService studentService;
 
     @GetMapping("/")
     public String home() {
@@ -29,11 +35,6 @@ public class HomeController {
 
     @GetMapping("/students")
     public List<Student> getStudents() {
-
-        Student s1 = new Student(1, "Shiva Rohith", "CSE", 8.8);
-        Student s2 = new Student(2, "Rahul", "ECE", 8.5);
-        Student s3 = new Student(3, "Priya", "IT", 9.1);
-
-        return List.of(s1, s2, s3);
+        return studentService.getStudents();
     }
 }
