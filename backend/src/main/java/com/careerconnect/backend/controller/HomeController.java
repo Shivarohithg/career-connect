@@ -25,7 +25,7 @@ public class HomeController {
     public Student getStudent() {
 
         Student student = new Student(
-                1,
+                
                 "Shiva Rohith",
                 "CSE",
                 8.8);
