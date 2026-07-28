@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.careerconnect.backend.model.Student;
 import com.careerconnect.backend.service.StudentService;
 
-
 @RestController
 public class HomeController {
 
@@ -25,7 +24,7 @@ public class HomeController {
     public Student getStudent() {
 
         Student student = new Student(
-                
+
                 "Shiva Rohith",
                 "CSE",
                 8.8);
@@ -36,5 +35,13 @@ public class HomeController {
     @GetMapping("/students")
     public List<Student> getStudents() {
         return studentService.getStudents();
+    }
+
+    @GetMapping("/add")
+    public String addStudent() {
+
+        studentService.addStudent();
+
+        return "Student Added Successfully";
     }
 }
