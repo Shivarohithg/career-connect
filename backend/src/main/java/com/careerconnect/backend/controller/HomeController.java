@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.careerconnect.backend.model.Student;
@@ -44,4 +45,26 @@ public class HomeController {
 
         return "Student Added Successfully";
     }
+
+    @GetMapping("/students/{id}")
+    public Student getStudent(@PathVariable int id) {
+
+        return studentService.getStudentById(id);
+
+    }
+
+    @GetMapping("/update/{id}")
+    public String updateStudent(@PathVariable int id) {
+
+        return studentService.updateStudent(id);
+
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteStudent(@PathVariable int id) {
+
+        return studentService.deleteStudent(id);
+
+    }
+
 }

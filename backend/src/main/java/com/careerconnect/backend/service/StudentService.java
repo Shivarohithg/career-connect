@@ -28,4 +28,37 @@ public class StudentService {
     public List<Student> getStudents() {
         return studentRepository.findAll();
     }
+
+    public Student getStudentById(int id) {
+
+        return studentRepository.findById(id).orElse(null);
+
+    }
+
+    public String updateStudent(int id) {
+
+        Student student = studentRepository.findById(id).orElse(null);
+
+        if (student == null) {
+            return "Student Not Found";
+        }
+
+        student.setCgpa(9.2);
+
+        studentRepository.save(student);
+
+        return "Student Updated Successfully";
+    }
+
+    public String deleteStudent(int id) {
+
+        if (!studentRepository.existsById(id)) {
+            return "Student Not Found";
+        }
+
+        studentRepository.deleteById(id);
+
+        return "Student Deleted Successfully";
+    }
+
 }

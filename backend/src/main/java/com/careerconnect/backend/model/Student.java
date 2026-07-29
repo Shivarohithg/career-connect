@@ -22,10 +22,10 @@ public class Student {
 
     public Student() {
 
-}
+    }
 
     public Student(String name, String branch, double cgpa) {
-        
+
         this.name = name;
         this.branch = branch;
         this.cgpa = cgpa;
@@ -45,5 +45,17 @@ public class Student {
 
     public double getCgpa() {
         return cgpa;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
+    public void setCgpa(double cgpa) {
+        this.cgpa = cgpa;
     }
 }
