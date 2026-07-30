@@ -2,6 +2,9 @@ package com.careerconnect.backend.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,13 +41,13 @@ public class HomeController {
         return studentService.getStudents();
     }
 
-    @GetMapping("/add")
-    public String addStudent() {
+@PostMapping("/add")
+public String addStudent(@RequestBody Student student) {
 
-        studentService.addStudent();
+    studentService.addStudent(student);
 
-        return "Student Added Successfully";
-    }
+    return "Student Added Successfully";
+}
 
     @GetMapping("/students/{id}")
     public Student getStudent(@PathVariable int id) {

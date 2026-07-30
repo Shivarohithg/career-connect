@@ -60,5 +60,10 @@ public class StudentService {
 
         return "Student Deleted Successfully";
     }
+    public void addStudent(Student student) {
+
+    studentRepository.save(student);
+
+}
 
 }
