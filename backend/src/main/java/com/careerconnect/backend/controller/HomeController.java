@@ -2,6 +2,9 @@ package com.careerconnect.backend.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -42,11 +45,12 @@ public class HomeController {
     }
 
 @PostMapping("/add")
-public String addStudent(@RequestBody Student student) {
+public ResponseEntity<String> addStudent(@RequestBody Student student) {
 
     studentService.addStudent(student);
 
-    return "Student Added Successfully";
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body("Student Added Successfully");
 }
 
     @GetMapping("/students/{id}")
