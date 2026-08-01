@@ -45,12 +45,13 @@ public class HomeController {
     }
 
 @PostMapping("/add")
-public ResponseEntity<String> addStudent(@RequestBody Student student) {
+public ResponseEntity<Student> addStudent(@RequestBody Student student){
 
-    studentService.addStudent(student);
+    Student savedStudent = studentService.addStudent(student);
 
     return ResponseEntity.status(HttpStatus.CREATED)
-            .body("Student Added Successfully");
+            .body(savedStudent);
+
 }
 
     @GetMapping("/students/{id}")

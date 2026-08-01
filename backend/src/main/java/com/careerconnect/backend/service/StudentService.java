@@ -15,14 +15,14 @@ public class StudentService {
     @Autowired
     private StudentRepository studentRepository;
 
-    public void addStudent() {
+    public Student addStudent() {
 
         Student student = new Student(
                 "Shiva Rohith",
                 "CSE",
                 8.8);
 
-        studentRepository.save(student);
+        return studentRepository.save(student);
     }
 
     public List<Student> getStudents() {
@@ -60,9 +60,9 @@ public class StudentService {
 
         return "Student Deleted Successfully";
     }
-    public void addStudent(Student student) {
+public Student addStudent(Student student) {
 
-    studentRepository.save(student);
+    return studentRepository.save(student);
 
 }
 
