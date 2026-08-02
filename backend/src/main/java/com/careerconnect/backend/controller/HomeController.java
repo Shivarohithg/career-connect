@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.careerconnect.backend.model.Student;
 import com.careerconnect.backend.service.StudentService;
+import com.careerconnect.backend.dto.StudentDTO;
 
 @RestController
 public class HomeController {
@@ -45,12 +46,18 @@ public class HomeController {
     }
 
 @PostMapping("/add")
-public ResponseEntity<Student> addStudent(@RequestBody Student student){
+public ResponseEntity<StudentDTO> addStudent(@RequestBody Student student){
 
     Student savedStudent = studentService.addStudent(student);
+    StudentDTO studentDTO = new StudentDTO(
+        savedStudent.getId(),
+        savedStudent.getName(),
+        savedStudent.getBranch(),
+        savedStudent.getCgpa()
+);
 
     return ResponseEntity.status(HttpStatus.CREATED)
-            .body(savedStudent);
+            .body(studentDTO);
 
 }
 
