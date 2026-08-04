@@ -31,8 +31,11 @@ public class StudentService {
 
     public Student getStudentById(int id) {
 
-        return studentRepository.findById(id).orElse(null);
+        if (!studentRepository.existsById(id)) {
+            throw new RuntimeException("Student Not Found");
+        }
 
+        return studentRepository.findById(id).get();
     }
 
     public String updateStudent(int id) {
@@ -60,10 +63,11 @@ public class StudentService {
 
         return "Student Deleted Successfully";
     }
-public Student addStudent(Student student) {
 
-    return studentRepository.save(student);
+    public Student addStudent(Student student) {
 
-}
+        return studentRepository.save(student);
+
+    }
 
 }
