@@ -2,6 +2,7 @@ package com.careerconnect.backend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import com.careerconnect.backend.repository.StudentRepository;
+import com.careerconnect.backend.exception.StudentNotFoundException;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class StudentService {
     public Student getStudentById(int id) {
 
         if (!studentRepository.existsById(id)) {
-            throw new RuntimeException("Student Not Found");
+            throw new StudentNotFoundException("Student Not Found");
         }
 
         return studentRepository.findById(id).get();
