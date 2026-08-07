@@ -7,17 +7,26 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 @Entity
 @Table(name = "students")
-
 public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private int id;
+
+    @NotBlank(message = "Name cannot be empty")
     private String name;
+
+    @NotBlank(message = "Branch cannot be empty")
     private String branch;
+
+    @Min(value = 0, message = "CGPA cannot be negative")
+    @Max(value = 10, message = "CGPA cannot exceed 10")
     private double cgpa;
 
     public Student() {

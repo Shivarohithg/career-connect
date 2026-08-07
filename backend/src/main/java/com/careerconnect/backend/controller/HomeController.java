@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.careerconnect.backend.model.Student;
 import com.careerconnect.backend.service.StudentService;
+
+import jakarta.validation.Valid;
+import jakarta.validation.Valid;
+
 import com.careerconnect.backend.dto.StudentDTO;
 
 @RestController
@@ -46,7 +50,7 @@ public class HomeController {
     }
 
 @PostMapping("/add")
-public ResponseEntity<StudentDTO> addStudent(@RequestBody Student student){
+public ResponseEntity<StudentDTO> addStudent(@Valid @RequestBody Student student) {
 
     Student savedStudent = studentService.addStudent(student);
     StudentDTO studentDTO = new StudentDTO(
