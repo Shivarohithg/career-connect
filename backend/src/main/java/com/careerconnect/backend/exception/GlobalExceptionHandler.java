@@ -27,12 +27,11 @@ public class GlobalExceptionHandler {
 
         Map<String, String> errors = new HashMap<>();
 
-        String errorMessage = ex.getBindingResult()
-                .getFieldError()
-                .getDefaultMessage();
-
-        errors.put("status", "400");
-        errors.put("message", errorMessage);
+ex.getBindingResult()
+        .getFieldErrors()
+        .forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
 
         return ResponseEntity.badRequest().body(errors);
     }
