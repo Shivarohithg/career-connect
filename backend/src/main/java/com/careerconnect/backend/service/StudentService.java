@@ -16,16 +16,6 @@ public class StudentService {
     @Autowired
     private StudentRepository studentRepository;
 
-    public Student addStudent() {
-
-        Student student = new Student(
-                "Shiva Rohith",
-                "CSE",
-                8.8);
-
-        return studentRepository.save(student);
-    }
-
     public List<Student> getStudents() {
         return studentRepository.findAll();
     }
