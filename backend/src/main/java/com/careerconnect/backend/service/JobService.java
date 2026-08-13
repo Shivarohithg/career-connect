@@ -25,4 +25,21 @@ public class JobService {
         return jobRepository.findAll();
 
     }
+
+    public Job getJobById(int id) {
+
+        return jobRepository.findById(id).orElse(null);
+
+    }
+
+    public String deleteJob(int id) {
+
+        if (!jobRepository.existsById(id)) {
+            return "Job Not Found";
+        }
+
+        jobRepository.deleteById(id);
+
+        return "Job Deleted Successfully";
+    }
 }
