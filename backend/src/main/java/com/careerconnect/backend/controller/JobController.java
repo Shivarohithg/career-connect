@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 import com.careerconnect.backend.model.Job;
 import com.careerconnect.backend.service.JobService;
@@ -50,5 +50,13 @@ public String deleteJob(@PathVariable int id) {
 
     return jobService.deleteJob(id);
 
+}
+
+@PutMapping("/jobs/{id}")
+public String updateJob(
+        @PathVariable int id,
+        @RequestBody Job job) {
+
+    return jobService.updateJob(id, job);
 }
 }

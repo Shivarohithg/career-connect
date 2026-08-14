@@ -31,6 +31,23 @@ public class JobService {
         return jobRepository.findById(id).orElse(null);
 
     }
+    public String updateJob(int id, Job updatedJob) {
+
+    Job job = jobRepository.findById(id).orElse(null);
+
+    if (job == null) {
+        return "Job Not Found";
+    }
+
+    job.setTitle(updatedJob.getTitle());
+    job.setCompany(updatedJob.getCompany());
+    job.setLocation(updatedJob.getLocation());
+    job.setSalary(updatedJob.getSalary());
+
+    jobRepository.save(job);
+
+    return "Job Updated Successfully";
+}
 
     public String deleteJob(int id) {
 
