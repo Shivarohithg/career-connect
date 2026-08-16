@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllJobs } from "../../services/jobService";
+import "./Jobs.css";
 
 function Jobs() {
 
@@ -7,29 +8,47 @@ function Jobs() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const loadJobs = async () => {
-        try {
-
-            const data = await getAllJobs();
-
-            setJobs(data);
-
-        } catch (error) {
-
-            console.error("Error loading jobs:", error);
-
-            setError("Unable to load jobs.");
-
-        } finally {
-
-            setLoading(false);
-
-        }
-    };
+    const [searchTerm, setSearchTerm] = useState("");
+    const [location, setLocation] = useState("");
 
     useEffect(() => {
+
+        const loadJobs = async () => {
+
+            try {
+
+                const data = await getAllJobs();
+
+                setJobs(data);
+
+            } catch (error) {
+
+                console.error("Error loading jobs:", error);
+
+                setError("Unable to load jobs.");
+
+            } finally {
+
+                setLoading(false);
+
+            }
+        };
+
         loadJobs();
+
     }, []);
+
+    const filteredJobs = jobs.filter((job) => {
+
+        const matchesSearch =
+            job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            job.company.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesLocation =
+            job.location.toLowerCase().includes(location.toLowerCase());
+
+        return matchesSearch && matchesLocation;
+    });
 
     if (loading) {
         return <h2>Loading jobs...</h2>;
@@ -40,28 +59,134 @@ function Jobs() {
     }
 
     return (
-        <div>
-            <h1>Available Jobs</h1>
+        <div className="jobs-page">
 
-            {jobs.length === 0 ? (
-                <p>No jobs available.</p>
+            {/* Hero Section */}
+            <section className="jobs-hero">
+
+                <h1>Find Your Next Opportunity</h1>
+
+                <p>
+                    Discover jobs that match your skills and career goals.
+                </p>
+
+            </section>
+
+
+            {/* Search Section */}
+            <div className="search-container">
+
+                <input
+                    type="text"
+                    placeholder="Search by job title or company"
+                    className="search-box"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+
+                <input
+                    type="text"
+                    placeholder="Location"
+                    className="search-box"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                />
+
+                <button className="search-button">
+                    Search
+                </button>
+
+            </div>
+
+
+            {/* Jobs Section */}
+            <h2 className="jobs-section-title">
+                Available Jobs
+            </h2>
+
+
+            {/* No Jobs */}
+            {filteredJobs.length === 0 ? (
+
+                <p className="no-jobs">
+                    No jobs found.
+                </p>
+
             ) : (
-                jobs.map((job) => (
-                    <div key={job.id}>
 
-                        <h2>{job.title}</h2>
+                /* Job Cards */
+                <div className="jobs-grid">
 
-                        <p>Company: {job.company}</p>
+                    {filteredJobs.map((job) => (
 
-                        <p>Location: {job.location}</p>
+                        <div
+                            className="job-card"
+                            key={job.id}
+                        >
 
-                        <p>Salary: ₹{job.salary}</p>
+                            {/* Company + Job Title */}
+                            <div className="job-card-header">
 
-                        <hr />
+                                <div className="company-logo">
+                                    {job.company.charAt(0).toUpperCase()}
+                                </div>
 
-                    </div>
-                ))
+                                <div>
+
+                                    <h3 className="job-title">
+                                        {job.title}
+                                    </h3>
+
+                                    <p className="job-company">
+                                        {job.company}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* Job Details */}
+                            <div className="job-details">
+
+                                <p className="job-info">
+                                    📍 {job.location}
+                                </p>
+
+                                <p className="job-salary">
+                                    ₹{job.salary.toLocaleString("en-IN")}
+                                </p>
+
+                            </div>
+
+
+                            {/* Job Tags */}
+                            <div className="job-tags">
+
+                                <span className="job-tag">
+                                    Full Time
+                                </span>
+
+                                <span className="job-tag">
+                                    {job.location}
+                                </span>
+
+                            </div>
+
+
+                            {/* View Details Button */}
+                            <button className="view-button">
+                                View Details
+                            </button>
+
+                        </div>
+
+                    ))}
+
+                </div>
+
             )}
+
         </div>
     );
 }
