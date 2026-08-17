@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import JobDetails from "./pages/JobDetails/JobDetails";
 
 import Navbar from "./components/Navbar/Navbar";
 import Jobs from "./pages/Jobs/Jobs";
@@ -24,6 +25,8 @@ function App() {
                 <Route path="/register" element={<Register />} />
 
                 <Route path="/jobs" element={<Jobs />} />
+
+                <Route path="/jobs/:id" element={<JobDetails />} />
 
             </Routes>
 

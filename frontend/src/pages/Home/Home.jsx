@@ -7,17 +7,17 @@ import CTA from "../../components/CTA/CTA";
 import Footer from "../../components/Footer/Footer";
 
 function Home() {
-  return (
-    <>
-      <Hero />
-      <Features />
-      <Companies />
-      <AIFeatures />
-      <Statistics />
-      <CTA />
-      <Footer />
-    </>
-  );
+    return (
+        <>
+            <Hero />
+            <Features />
+            <Companies />
+            <AIFeatures />
+            <Statistics />
+            <CTA />
+            <Footer />
+        </>
+    );
 }
 
 export default Home;

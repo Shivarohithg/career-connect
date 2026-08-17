@@ -1,41 +1,40 @@
+import { useNavigate } from "react-router-dom";
 import styles from "./Hero.module.css";
 import heroImage from "../../assets/images/hero.svg";
 
 function Hero() {
-    return (
-        <section className={styles.hero}>
+  const navigate = useNavigate();
 
-            <div className={styles.left}>
+  return (
+    <section className={styles.hero}>
+      <div className={styles.left}>
+        <h1>
+          Find Your Dream Career
+          <span> with Confidence.</span>
+        </h1>
 
-                <h1>
-                    Find Your Dream Career
-                    <span> with Confidence.</span>
-                </h1>
+        <p>
+          CareerConnect helps students connect with recruiters, discover
+          placement opportunities, and manage applications from one platform.
+        </p>
 
-                <p>
-                    CareerConnect helps students connect with recruiters,
-                    discover placement opportunities, and manage
-                    applications from one platform.
-                </p>
+        <div className={styles.buttons}>
+          <button className={styles.primary}>Get Started</button>
 
-                <div className={styles.buttons}>
-                    <button className={styles.primary}>
-                        Get Started
-                    </button>
+          <button
+            className={styles.secondary}
+            onClick={() => navigate("/jobs")}
+          >
+            Browse Jobs
+          </button>
+        </div>
+      </div>
 
-                    <button className={styles.secondary}>
-                        Browse Jobs
-                    </button>
-                </div>
-
-            </div>
-
-            <div className={styles.right}>
-                <img src={heroImage} alt="Career Illustration" />
-            </div>
-
-        </section>
-    );
+      <div className={styles.right}>
+        <img src={heroImage} alt="Career Illustration" />
+      </div>
+    </section>
+  );
 }
 
 export default Hero;
