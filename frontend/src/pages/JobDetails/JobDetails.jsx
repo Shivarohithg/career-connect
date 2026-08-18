@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getJobById } from "../../services/jobService";
+import { applyForJob } from "../../services/applicationService";
 import "./JobDetails.css";
 
 function JobDetails() {
@@ -11,6 +12,8 @@ function JobDetails() {
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [applying, setApplying] = useState(false);
+    const [applicationMessage, setApplicationMessage] = useState("");
 
     useEffect(() => {
 
@@ -38,6 +41,37 @@ function JobDetails() {
         loadJob();
 
     }, [id]);
+
+    const handleApply = async () => {
+
+        try {
+
+            setApplying(true);
+            setApplicationMessage("");
+
+            // Temporary student ID for testing
+            const studentId = 1;
+
+            await applyForJob(studentId, id);
+
+            setApplicationMessage(
+                "Application submitted successfully!"
+            );
+
+        } catch (error) {
+
+            console.error("Error applying for job:", error);
+
+            setApplicationMessage(
+                "Unable to submit application."
+            );
+
+        } finally {
+
+            setApplying(false);
+
+        }
+    };
 
     if (loading) {
         return <h2>Loading job details...</h2>;
@@ -83,6 +117,7 @@ function JobDetails() {
 
                     <div className="details-item">
                         <span>📍</span>
+
                         <div>
                             <strong>Location</strong>
                             <p>{job.location}</p>
@@ -91,6 +126,7 @@ function JobDetails() {
 
                     <div className="details-item">
                         <span>💰</span>
+
                         <div>
                             <strong>Salary</strong>
                             <p>
@@ -101,6 +137,7 @@ function JobDetails() {
 
                     <div className="details-item">
                         <span>💼</span>
+
                         <div>
                             <strong>Employment</strong>
                             <p>Full Time</p>
@@ -127,9 +164,19 @@ function JobDetails() {
 
                 </section>
 
-                <button className="apply-button">
-                    Apply Now
+                <button
+                    className="apply-button"
+                    onClick={handleApply}
+                    disabled={applying}
+                >
+                    {applying ? "Applying..." : "Apply Now"}
                 </button>
+
+                {applicationMessage && (
+                    <p className="application-message">
+                        {applicationMessage}
+                    </p>
+                )}
 
             </div>
 
