@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getJobById } from "../../services/jobService";
-import { applyForJob } from "../../services/applicationService";
+import { getJobById, applyForJob } from "../../services/jobService";
 import "./JobDetails.css";
 
 function JobDetails() {
@@ -12,6 +11,7 @@ function JobDetails() {
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
     const [applying, setApplying] = useState(false);
     const [applicationMessage, setApplicationMessage] = useState("");
 
@@ -42,6 +42,7 @@ function JobDetails() {
 
     }, [id]);
 
+
     const handleApply = async () => {
 
         try {
@@ -62,9 +63,17 @@ function JobDetails() {
 
             console.error("Error applying for job:", error);
 
-            setApplicationMessage(
-                "Unable to submit application."
-            );
+            if (error.response?.data) {
+
+                setApplicationMessage(error.response.data);
+
+            } else {
+
+                setApplicationMessage(
+                    "Unable to submit application."
+                );
+
+            }
 
         } finally {
 
@@ -72,6 +81,7 @@ function JobDetails() {
 
         }
     };
+
 
     if (loading) {
         return <h2>Loading job details...</h2>;
@@ -85,6 +95,7 @@ function JobDetails() {
         return <h2>Job not found.</h2>;
     }
 
+
     return (
         <div className="job-details-page">
 
@@ -95,6 +106,7 @@ function JobDetails() {
                 ← Back to Jobs
             </button>
 
+
             <div className="job-details-card">
 
                 <div className="job-details-header">
@@ -104,49 +116,64 @@ function JobDetails() {
                     </div>
 
                     <div>
+
                         <h1>{job.title}</h1>
 
                         <p className="details-company">
                             {job.company}
                         </p>
+
                     </div>
 
                 </div>
 
+
                 <div className="job-details-info">
 
                     <div className="details-item">
+
                         <span>📍</span>
 
                         <div>
                             <strong>Location</strong>
                             <p>{job.location}</p>
                         </div>
+
                     </div>
 
+
                     <div className="details-item">
+
                         <span>💰</span>
 
                         <div>
                             <strong>Salary</strong>
+
                             <p>
                                 ₹{job.salary.toLocaleString("en-IN")}
                             </p>
+
                         </div>
+
                     </div>
 
+
                     <div className="details-item">
+
                         <span>💼</span>
 
                         <div>
                             <strong>Employment</strong>
                             <p>Full Time</p>
                         </div>
+
                     </div>
 
                 </div>
 
+
                 <hr />
+
 
                 <section className="job-description">
 
@@ -164,6 +191,7 @@ function JobDetails() {
 
                 </section>
 
+
                 <button
                     className="apply-button"
                     onClick={handleApply}
@@ -171,6 +199,7 @@ function JobDetails() {
                 >
                     {applying ? "Applying..." : "Apply Now"}
                 </button>
+
 
                 {applicationMessage && (
                     <p className="application-message">

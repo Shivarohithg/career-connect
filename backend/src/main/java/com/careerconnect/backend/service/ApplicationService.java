@@ -34,6 +34,12 @@ public class ApplicationService {
                 .orElseThrow(() ->
                         new RuntimeException("Job not found"));
 
+        // Check if student already applied
+        if (applicationRepository.existsByStudentAndJob(student, job)) {
+            throw new RuntimeException(
+                    "You have already applied for this job");
+        }
+
         Application application = new Application();
 
         application.setStudent(student);

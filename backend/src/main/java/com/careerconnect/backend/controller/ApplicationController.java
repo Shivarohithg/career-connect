@@ -17,15 +17,24 @@ public class ApplicationController {
     private ApplicationService applicationService;
 
     @PostMapping("/applications/{studentId}/{jobId}")
-    public ResponseEntity<Application> applyForJob(
+    public ResponseEntity<?> applyForJob(
             @PathVariable int studentId,
             @PathVariable int jobId) {
 
-        Application application =
-                applicationService.applyForJob(studentId, jobId);
+        try {
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(application);
+            Application application =
+                    applicationService.applyForJob(studentId, jobId);
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(application);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
+        }
     }
 }
