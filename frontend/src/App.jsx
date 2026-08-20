@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import JobDetails from "./pages/JobDetails/JobDetails";
+import MyApplications from "./pages/MyApplications/MyApplications";
+import Applications from "./pages/Applications/Applications";
 
 import Navbar from "./components/Navbar/Navbar";
 import Jobs from "./pages/Jobs/Jobs";
@@ -9,31 +11,29 @@ import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 
 function App() {
+  return (
+    <BrowserRouter>
+      <Navbar />
 
-    return (
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-        <BrowserRouter>
+        <Route path="/login" element={<Login />} />
 
-            <Navbar />
+        <Route path="/register" element={<Register />} />
 
-            <Routes>
+        <Route path="/jobs" element={<Jobs />} />
 
-                <Route path="/" element={<Home />} />
+        <Route path="/jobs/:id" element={<JobDetails />} />
 
-                <Route path="/login" element={<Login />} />
+        <Route path="/my-applications" element={<MyApplications />} />
 
-                <Route path="/register" element={<Register />} />
+        <Route path="/applications" element={<Applications />} />
 
-                <Route path="/jobs" element={<Jobs />} />
+      </Routes>
 
-                <Route path="/jobs/:id" element={<JobDetails />} />
-
-            </Routes>
-
-        </BrowserRouter>
-
-    );
-
+    </BrowserRouter>
+  );
 }
 
 export default App;

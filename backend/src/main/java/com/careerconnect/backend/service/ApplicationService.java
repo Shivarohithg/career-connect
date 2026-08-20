@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 import com.careerconnect.backend.model.Application;
 import com.careerconnect.backend.model.Job;
@@ -49,4 +50,12 @@ public class ApplicationService {
 
         return applicationRepository.save(application);
     }
+    public List<Application> getApplicationsByStudent(int studentId) {
+
+    Student student = studentRepository.findById(studentId)
+            .orElseThrow(() ->
+                    new RuntimeException("Student not found"));
+
+    return applicationRepository.findByStudent(student);
+}
 }
