@@ -8,6 +8,7 @@ import Jobs from "./pages/Jobs/Jobs";
 
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
+import MyProfile from "./pages/MyProfile/MyProfile";
 import Register from "./pages/Register/Register";
 
 function App() {
@@ -29,6 +30,8 @@ function App() {
         <Route path="/my-applications" element={<MyApplications />} />
 
         <Route path="/applications" element={<Applications />} />
+
+        <Route path="/profile" element={<MyProfile />} />
 
       </Routes>
 
