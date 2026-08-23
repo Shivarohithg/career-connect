@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.careerconnect.backend.model.StudentProfile;
 import com.careerconnect.backend.service.StudentProfileService;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 public class StudentProfileController {
@@ -52,5 +53,30 @@ public class StudentProfileController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(profile);
+
+
     }
+    @PutMapping("/student-profiles/{studentId}")
+public ResponseEntity<StudentProfile> updateProfile(
+        @PathVariable int studentId,
+        @RequestParam String skills,
+        @RequestParam String projects,
+        @RequestParam String githubUsername,
+        @RequestParam String leetcodeUsername,
+        @RequestParam String hackerrankUsername,
+        @RequestParam String resumePath) {
+
+    StudentProfile profile =
+            studentProfileService.updateProfile(
+                    studentId,
+                    skills,
+                    projects,
+                    githubUsername,
+                    leetcodeUsername,
+                    hackerrankUsername,
+                    resumePath
+            );
+
+    return ResponseEntity.ok(profile);
+}
 }
