@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import JobDetails from "./pages/JobDetails/JobDetails";
 import MyApplications from "./pages/MyApplications/MyApplications";
 import Applications from "./pages/Applications/Applications";
@@ -10,13 +11,16 @@ import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import MyProfile from "./pages/MyProfile/MyProfile";
 import Register from "./pages/Register/Register";
+import CareerAnalysis from "./pages/CareerAnalysis/CareerAnalysis";
 
 function App() {
   return (
     <BrowserRouter>
+
       <Navbar />
 
       <Routes>
+
         <Route path="/" element={<Home />} />
 
         <Route path="/login" element={<Login />} />
@@ -27,11 +31,25 @@ function App() {
 
         <Route path="/jobs/:id" element={<JobDetails />} />
 
-        <Route path="/my-applications" element={<MyApplications />} />
+        <Route
+          path="/my-applications"
+          element={<MyApplications />}
+        />
 
-        <Route path="/applications" element={<Applications />} />
+        <Route
+          path="/applications"
+          element={<Applications />}
+        />
 
-        <Route path="/profile" element={<MyProfile />} />
+        <Route
+          path="/profile"
+          element={<MyProfile />}
+        />
+
+        <Route
+          path="/career-analysis"
+          element={<CareerAnalysis />}
+        />
 
       </Routes>
 

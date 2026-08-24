@@ -1,0 +1,96 @@
+.career-analysis-page {
+    min-height: calc(100vh - 70px);
+    padding: 50px 8%;
+    background: #f7f9fc;
+}
+
+/* Header */
+
+.career-analysis-header {
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.career-analysis-header h1 {
+    font-size: 38px;
+    margin-bottom: 12px;
+    color: #1f2937;
+}
+
+.career-analysis-header p {
+    color: #6b7280;
+    font-size: 17px;
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Cards */
+
+.analysis-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 28px 30px;
+    margin-bottom: 25px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.analysis-card h2 {
+    margin: 0 0 22px 0;
+    font-size: 22px;
+    color: #1f2937;
+}
+
+/* Items */
+
+.analysis-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.analysis-item {
+    background: #f3f6ff;
+    border: 1px solid #dbe4ff;
+    border-radius: 10px;
+    padding: 13px 18px;
+    color: #374151;
+    font-size: 15px;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analysis-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+    .career-analysis-page {
+        padding: 30px 20px;
+    }
+
+    .career-analysis-header h1 {
+        font-size: 30px;
+    }
+
+    .career-analysis-header p {
+        font-size: 15px;
+    }
+
+    .analysis-card {
+        padding: 22px;
+    }
+
+    .analysis-card h2 {
+        font-size: 20px;
+    }
+
+    .analysis-item {
+        width: 100%;
+    }
+}

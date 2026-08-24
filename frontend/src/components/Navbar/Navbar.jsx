@@ -20,14 +20,20 @@ function Navbar() {
                 </li>
 
                 <li>
-                    <Link to="/profile">
-                        My Profile
+                    <Link to="/career-analysis">
+                        Career Analysis
                     </Link>
                 </li>
 
                 <li>
                     <Link to="/my-applications">
                         My Applications
+                    </Link>
+                </li>
+
+                <li>
+                    <Link to="/profile">
+                        My Profile
                     </Link>
                 </li>
 
