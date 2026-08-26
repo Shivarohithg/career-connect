@@ -29,9 +29,7 @@ function CareerAnalysis() {
                     error
                 );
 
-                setError(
-                    "Unable to load career analysis."
-                );
+                setError("Unable to load career analysis.");
 
             } finally {
 
@@ -55,23 +53,77 @@ function CareerAnalysis() {
         return <h2>Career analysis not found.</h2>;
     }
 
-    const roles =
-        analysis.recommendedRoles
-            .split(",")
-            .map(role => role.trim());
+    const roles = analysis.recommendedRoles
+        ? analysis.recommendedRoles
+              .split(",")
+              .map(role => role.trim())
+        : [];
 
-    const skills =
-        analysis.recommendedSkills
-            .split(",")
-            .map(skill => skill.trim());
+    const skills = analysis.recommendedSkills
+        ? analysis.recommendedSkills
+              .split(",")
+              .map(skill => skill.trim())
+        : [];
 
-    const skillGaps =
-        analysis.skillGaps
-            .split(",")
-            .map(gap => gap.trim());
+    const skillGaps = analysis.skillGaps
+        ? analysis.skillGaps
+              .split(",")
+              .map(gap => gap.trim())
+        : [];
+
+    /*
+     * Extract percentage from role text.
+     *
+     * Example:
+     * "Java Backend Developer (67% Match)"
+     *
+     * or
+     * "Java Backend Developer (2/3 skills)"
+     */
+
+    const getPercentage = (role) => {
+
+        const percentageMatch = role.match(/(\d+)%/);
+
+        if (percentageMatch) {
+            return parseInt(percentageMatch[1]);
+        }
+
+        const fractionMatch = role.match(/\((\d+)\/(\d+)\s*skills?\)/);
+
+        if (fractionMatch) {
+
+            const matched = parseInt(fractionMatch[1]);
+            const total = parseInt(fractionMatch[2]);
+
+            if (total > 0) {
+                return Math.round((matched / total) * 100);
+            }
+        }
+
+        return 0;
+    };
+
+
+    /*
+     * Remove percentage / skill information
+     * from role name.
+     */
+
+    const getRoleName = (role) => {
+
+        return role
+            .replace(/\s*\(\d+%\s*Match\)/i, "")
+            .replace(/\s*\(\d+\/\d+\s*skills?\)/i, "")
+            .trim();
+    };
+
 
     return (
+
         <div className="career-analysis-page">
+
+            {/* Header */}
 
             <div className="career-analysis-header">
 
@@ -90,20 +142,52 @@ function CareerAnalysis() {
 
             <div className="analysis-card">
 
-                <h2>Recommended Roles</h2>
+                <h2>🎯 Recommended Roles</h2>
 
-                <div className="analysis-list">
+                <div className="role-list">
 
-                    {roles.map((role, index) => (
+                    {roles.map((role, index) => {
 
-                        <div
-                            className="analysis-item"
-                            key={index}
-                        >
-                            ✓ {role}
-                        </div>
+                        const percentage = getPercentage(role);
+                        const roleName = getRoleName(role);
 
-                    ))}
+                        return (
+
+                            <div
+                                className="role-match"
+                                key={index}
+                            >
+
+                                <div className="role-match-header">
+
+                                    <span className="role-name">
+                                        {roleName}
+                                    </span>
+
+                                    <span className="match-percentage">
+                                        {percentage}% Match
+                                    </span>
+
+                                </div>
+
+
+                                <div className="progress-bar">
+
+                                    <div
+                                        className="progress-fill"
+                                        style={{
+                                            width: `${percentage}%`
+                                        }}
+                                    >
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        );
+
+                    })}
 
                 </div>
 
@@ -114,7 +198,7 @@ function CareerAnalysis() {
 
             <div className="analysis-card">
 
-                <h2>Recommended Skills</h2>
+                <h2>💡 Recommended Skills</h2>
 
                 <div className="analysis-list">
 
@@ -124,7 +208,7 @@ function CareerAnalysis() {
                             className="analysis-item"
                             key={index}
                         >
-                            {skill}
+                            ✓ {skill}
                         </div>
 
                     ))}
@@ -138,17 +222,17 @@ function CareerAnalysis() {
 
             <div className="analysis-card">
 
-                <h2>Skill Gaps</h2>
+                <h2>📚 Skill Gaps</h2>
 
                 <div className="analysis-list">
 
                     {skillGaps.map((gap, index) => (
 
                         <div
-                            className="analysis-item"
+                            className="analysis-item skill-gap"
                             key={index}
                         >
-                            {gap}
+                            ⚠ {gap}
                         </div>
 
                     ))}
