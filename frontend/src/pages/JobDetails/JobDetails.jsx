@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getJobById, applyForJob } from "../../services/jobService";
+import { getJobById } from "../../services/jobService";
+import { applyForJob } from "../../services/applicationService";
 import "./JobDetails.css";
 
 function JobDetails() {

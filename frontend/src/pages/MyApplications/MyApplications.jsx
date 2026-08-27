@@ -122,13 +122,17 @@ function MyApplications() {
 
                             </div>
 
-                            <div className="application-status">
+<div className="application-status">
 
-                                <span>
-                                    {application.status}
-                                </span>
+    <span
+        className={`status-${application.status
+            ?.toLowerCase()
+            .replace(/\s+/g, "-")}`}
+    >
+        {application.status}
+    </span>
 
-                            </div>
+</div>
 
                         </div>
 

@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { getAllJobs } from "../../services/jobService";
 import "./Jobs.css";
 
 function Jobs() {
+
   const navigate = useNavigate();
 
   const [jobs, setJobs] = useState([]);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -14,54 +18,114 @@ function Jobs() {
   const [location, setLocation] = useState("");
 
   useEffect(() => {
-    const loadJobs = async () => {
-      try {
-        const data = await getAllJobs();
 
-        setJobs(data);
+    const loadData = async () => {
+
+      try {
+
+        // Load all jobs
+        const jobsData = await getAllJobs();
+
+        setJobs(jobsData);
+
+        // Load career analysis
+        const analysisResponse = await axios.get(
+          "http://localhost:8080/career-analysis/1"
+        );
+
+        const analysis = analysisResponse.data;
+
+        // Get recommended roles
+        const roles = analysis.recommendedRoles
+          .split(",")
+          .map(role => role.trim().toLowerCase());
+
+        // Find jobs matching recommended roles
+const matchedJobs = jobsData.filter((job) => {
+
+  const jobTitle = job.title.toLowerCase();
+
+  return roles.some((role) => {
+
+    const roleWords = role.split(" ");
+
+    return roleWords.some((word) => {
+
+      return word.length > 2 && jobTitle.includes(word);
+
+    });
+
+  });
+
+});
+
+        setRecommendedJobs(matchedJobs);
+
       } catch (error) {
+
         console.error("Error loading jobs:", error);
 
         setError("Unable to load jobs.");
+
       } finally {
+
         setLoading(false);
+
       }
+
     };
 
-    loadJobs();
+    loadData();
+
   }, []);
 
+
+  // Search filtering
   const filteredJobs = jobs.filter((job) => {
+
     const matchesSearch =
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesLocation = job.location
-      .toLowerCase()
-      .includes(location.toLowerCase());
+    const matchesLocation =
+      job.location.toLowerCase().includes(location.toLowerCase());
 
     return matchesSearch && matchesLocation;
+
   });
+
 
   if (loading) {
     return <h2>Loading jobs...</h2>;
   }
 
+
   if (error) {
     return <h2>{error}</h2>;
   }
 
+
   return (
+
     <div className="jobs-page">
+
       {/* Hero Section */}
+
       <section className="jobs-hero">
+
         <h1>Find Your Next Opportunity</h1>
 
-        <p>Discover jobs that match your skills and career goals.</p>
+        <p>
+          Discover jobs that match your skills and career goals.
+        </p>
+
       </section>
 
+
       {/* Search Section */}
+
       <div className="search-container">
+
         <input
           type="text"
           placeholder="Search by job title or company"
@@ -78,60 +142,203 @@ function Jobs() {
           onChange={(e) => setLocation(e.target.value)}
         />
 
-        <button className="search-button">Search</button>
+        <button className="search-button">
+          Search
+        </button>
+
       </div>
 
-      {/* Jobs Section */}
-      <h2 className="jobs-section-title">Available Jobs</h2>
+
+      {/* Recommended Jobs */}
+
+      {recommendedJobs.length > 0 && (
+
+        <>
+
+          <h2 className="jobs-section-title">
+            ⭐ Recommended Jobs
+          </h2>
+
+          <div className="jobs-grid">
+
+            {recommendedJobs.map((job) => (
+
+              <div
+                className="job-card recommended-card"
+                key={`recommended-${job.id}`}
+              >
+
+                {/* Company + Job Title */}
+
+                <div className="job-card-header">
+
+                  <div className="company-logo">
+                    {job.company.charAt(0).toUpperCase()}
+                  </div>
+
+                  <div>
+
+                    <h3 className="job-title">
+                      {job.title}
+                    </h3>
+
+                    <p className="job-company">
+                      {job.company}
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                {/* Job Details */}
+
+                <div className="job-details">
+
+                  <p className="job-info">
+                    📍 {job.location}
+                  </p>
+
+                  <p className="job-salary">
+                    ₹{job.salary.toLocaleString("en-IN")}
+                  </p>
+
+                </div>
+
+
+                {/* Tags */}
+
+                <div className="job-tags">
+
+                  <span className="job-tag">
+                    Recommended
+                  </span>
+
+                  <span className="job-tag">
+                    Full Time
+                  </span>
+
+                </div>
+
+
+                <button
+                  className="view-button"
+                  onClick={() =>
+                    navigate(`/jobs/${job.id}`)
+                  }
+                >
+                  View Details
+                </button>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </>
+
+      )}
+
+
+      {/* Available Jobs */}
+
+      <h2 className="jobs-section-title">
+        Available Jobs
+      </h2>
+
 
       {/* No Jobs */}
+
       {filteredJobs.length === 0 ? (
-        <p className="no-jobs">No jobs found.</p>
+
+        <p className="no-jobs">
+          No jobs found.
+        </p>
+
       ) : (
-        /* Job Cards */
+
         <div className="jobs-grid">
+
           {filteredJobs.map((job) => (
-            <div className="job-card" key={job.id}>
+
+            <div
+              className="job-card"
+              key={job.id}
+            >
+
               {/* Company + Job Title */}
+
               <div className="job-card-header">
+
                 <div className="company-logo">
                   {job.company.charAt(0).toUpperCase()}
                 </div>
 
                 <div>
-                  <h3 className="job-title">{job.title}</h3>
 
-                  <p className="job-company">{job.company}</p>
+                  <h3 className="job-title">
+                    {job.title}
+                  </h3>
+
+                  <p className="job-company">
+                    {job.company}
+                  </p>
+
                 </div>
+
               </div>
 
+
               {/* Job Details */}
+
               <div className="job-details">
-                <p className="job-info">📍 {job.location}</p>
+
+                <p className="job-info">
+                  📍 {job.location}
+                </p>
 
                 <p className="job-salary">
                   ₹{job.salary.toLocaleString("en-IN")}
                 </p>
+
               </div>
+
 
               {/* Job Tags */}
-              <div className="job-tags">
-                <span className="job-tag">Full Time</span>
 
-                <span className="job-tag">{job.location}</span>
+              <div className="job-tags">
+
+                <span className="job-tag">
+                  Full Time
+                </span>
+
+                <span className="job-tag">
+                  {job.location}
+                </span>
+
               </div>
+
 
               <button
                 className="view-button"
-                onClick={() => navigate(`/jobs/${job.id}`)}
+                onClick={() =>
+                  navigate(`/jobs/${job.id}`)
+                }
               >
                 View Details
               </button>
+
             </div>
+
           ))}
+
         </div>
+
       )}
+
     </div>
+
   );
 }
 
