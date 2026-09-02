@@ -1,29 +1,145 @@
+import { useEffect, useState } from "react";
+import {
+    getApplicationsByStudent,
+    updateApplicationStatus
+} from "../../services/applicationService";
 import "./Applications.css";
 
 function Applications() {
+
+    const [applications, setApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [message, setMessage] = useState("");
+
+    const studentId = 1;
+
+    useEffect(() => {
+        loadApplications();
+    }, []);
+
+    const loadApplications = async () => {
+        try {
+            const data = await getApplicationsByStudent(studentId);
+            setApplications(data);
+        } catch (error) {
+            console.error(error);
+            setMessage("Failed to load applications");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStatusUpdate = async (applicationId, status) => {
+
+        try {
+            await updateApplicationStatus(applicationId, status);
+
+            setMessage(`Application ${status.toLowerCase()} successfully`);
+
+            await loadApplications();
+
+        } catch (error) {
+            console.error(error);
+
+            setMessage(
+                error.response?.data || "Failed to update application"
+            );
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="applications-page">
+                <h1>Applications</h1>
+                <p>Loading applications...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="applications-page">
 
-            <h1>My Applications</h1>
+            <h1>Application Management</h1>
 
             <p className="applications-subtitle">
-                Track the jobs you have applied for.
+                Manage student job applications.
             </p>
 
-            <div className="application-card">
+            {message && (
+                <p className="application-message">
+                    {message}
+                </p>
+            )}
 
-                <div>
-                    <h2>Java Developer</h2>
-                    <p>Tech Solutions</p>
-                    <p>📍 Bangalore</p>
-                </div>
+            {applications.length === 0 ? (
 
-                <div className="application-status">
-                    <span>APPLIED</span>
-                    <p>Applied on: 18-08-2026</p>
-                </div>
+                <p>No applications found.</p>
 
-            </div>
+            ) : (
+
+                applications.map((application) => (
+
+                    <div
+                        className="application-card"
+                        key={application.id}
+                    >
+
+                        <div>
+                            <h2>{application.job.title}</h2>
+
+                            <p>{application.job.company}</p>
+
+                            <p>
+                                📍 {application.job.location}
+                            </p>
+
+                            <p>
+                                Applied on: {application.appliedDate}
+                            </p>
+                        </div>
+
+                        <div className="application-status">
+
+                            <span>
+                                {application.status}
+                            </span>
+
+                            {application.status === "APPLIED" && (
+                                <div className="application-actions">
+
+                                    <button
+                                        className="accept-btn"
+                                        onClick={() =>
+                                            handleStatusUpdate(
+                                                application.id,
+                                                "ACCEPTED"
+                                            )
+                                        }
+                                    >
+                                        Accept
+                                    </button>
+
+                                    <button
+                                        className="reject-btn"
+                                        onClick={() =>
+                                            handleStatusUpdate(
+                                                application.id,
+                                                "REJECTED"
+                                            )
+                                        }
+                                    >
+                                        Reject
+                                    </button>
+
+                                </div>
+                            )}
+
+                        </div>
+
+                    </div>
+
+                ))
+            )}
 
         </div>
     );

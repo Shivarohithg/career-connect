@@ -23,41 +23,244 @@ function Jobs() {
 
       try {
 
-        // Load all jobs
+        // =====================================
+        // 1. Load all jobs
+        // =====================================
+
         const jobsData = await getAllJobs();
 
         setJobs(jobsData);
 
-        // Load career analysis
+
+        // =====================================
+        // 2. Load Career Analysis
+        // =====================================
+
         const analysisResponse = await axios.get(
           "http://localhost:8080/career-analysis/1"
         );
 
         const analysis = analysisResponse.data;
 
-        // Get recommended roles
-        const roles = analysis.recommendedRoles
-          .split(",")
-          .map(role => role.trim().toLowerCase());
 
-        // Find jobs matching recommended roles
-const matchedJobs = jobsData.filter((job) => {
+        // =====================================
+        // 3. Load Student Profile
+        // =====================================
 
-  const jobTitle = job.title.toLowerCase();
+        const profileResponse = await axios.get(
+          "http://localhost:8080/student-profiles/1"
+        );
 
-  return roles.some((role) => {
+        const profile = profileResponse.data;
 
-    const roleWords = role.split(" ");
 
-    return roleWords.some((word) => {
+        // =====================================
+        // 4. Student Profile Skills
+        // =====================================
 
-      return word.length > 2 && jobTitle.includes(word);
+        const profileSkills = profile.skills
+          ? profile.skills
+              .split(",")
+              .map(skill => skill.trim().toLowerCase())
+              .filter(skill => skill.length > 2)
+          : [];
 
-    });
 
-  });
+        // =====================================
+        // 5. Job Role Required Skills
+        // =====================================
+        // These match the JobRole data
+        // stored in your database.
 
-});
+        const jobRoles = {
+
+          "java backend developer": [
+            "java",
+            "spring boot",
+            "sql"
+          ],
+
+          "full stack developer": [
+            "javascript",
+            "react",
+            "html",
+            "css",
+            "node.js"
+          ],
+
+          "frontend developer": [
+            "html",
+            "css",
+            "javascript",
+            "react",
+            "git"
+          ],
+
+          "python developer": [
+            "python",
+            "sql",
+            "git",
+            "rest apis"
+          ],
+
+          "software engineer": [
+            "java",
+            "dsa",
+            "oop",
+            "git",
+            "sql"
+          ],
+
+          "data analyst": [
+            "python",
+            "sql",
+            "excel",
+            "statistics",
+            "power bi"
+          ]
+
+        };
+
+
+        // =====================================
+        // 6. Calculate Profile → Role Match
+        // =====================================
+
+        const roleMatches = Object.entries(jobRoles).map(
+          ([role, requiredSkills]) => {
+
+            const matchedSkills = requiredSkills.filter(
+              requiredSkill =>
+                profileSkills.some(profileSkill =>
+                  profileSkill.includes(requiredSkill) ||
+                  requiredSkill.includes(profileSkill)
+                )
+            );
+
+            const percentage =
+              requiredSkills.length > 0
+                ? Math.round(
+                    (matchedSkills.length / requiredSkills.length) * 100
+                  )
+                : 0;
+
+            return {
+              role,
+              percentage,
+              matchedSkills
+            };
+
+          }
+        );
+
+
+        // =====================================
+        // 7. Get Career Analysis Roles
+        // =====================================
+
+        const analysisRoles = analysis.recommendedRoles
+          ? analysis.recommendedRoles
+              .split(",")
+              .map(role =>
+                role
+                  .replace(/\(\d+%\s*Match\)/i, "")
+                  .replace(/\(\d+\/\d+\s*skills\)/i, "")
+                  .trim()
+                  .toLowerCase()
+              )
+          : [];
+
+
+        // =====================================
+        // 8. Find Recommended Jobs
+        // =====================================
+
+        const matchedJobs = jobsData.filter(job => {
+
+          const jobTitle = job.title.toLowerCase();
+
+          // -------------------------------------
+          // Match through Career Analysis
+          // -------------------------------------
+
+          const careerAnalysisMatch = analysisRoles.some(
+            role => {
+
+              const roleWords = role.split(" ");
+
+              return roleWords.some(word => {
+
+                // Ignore generic words
+                if (
+                  word.length <= 2 ||
+                  word === "developer" ||
+                  word === "engineer"
+                ) {
+                  return false;
+                }
+
+                return jobTitle.includes(word);
+
+              });
+
+            }
+          );
+
+
+          // -------------------------------------
+          // Match through Profile Skills
+          // -------------------------------------
+
+          const profileSkillMatch = profileSkills.some(
+            skill => jobTitle.includes(skill)
+          );
+
+
+          // -------------------------------------
+          // Match through Job Roles
+          // -------------------------------------
+
+          const roleSkillMatch = roleMatches.some(
+            roleData => {
+
+              // Only consider roles where
+              // student has at least one matching skill
+
+              if (roleData.percentage === 0) {
+                return false;
+              }
+
+              const roleName = roleData.role;
+
+              // Match meaningful role words
+              const roleWords = roleName.split(" ");
+
+              return roleWords.some(word => {
+
+                if (
+                  word.length <= 2 ||
+                  word === "developer" ||
+                  word === "engineer"
+                ) {
+                  return false;
+                }
+
+                return jobTitle.includes(word);
+
+              });
+
+            }
+          );
+
+
+          return (
+            careerAnalysisMatch ||
+            profileSkillMatch ||
+            roleSkillMatch
+          );
+
+        });
+
 
         setRecommendedJobs(matchedJobs);
 
@@ -75,41 +278,71 @@ const matchedJobs = jobsData.filter((job) => {
 
     };
 
+
     loadData();
 
   }, []);
 
 
-  // Search filtering
-  const filteredJobs = jobs.filter((job) => {
+  // =====================================
+  // Search Filtering
+  // =====================================
+
+  const filteredJobs = jobs.filter(job => {
 
     const matchesSearch =
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchTerm.toLowerCase());
+      job.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+
+      job.company
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
     const matchesLocation =
-      job.location.toLowerCase().includes(location.toLowerCase());
+      job.location
+        .toLowerCase()
+        .includes(location.toLowerCase());
 
     return matchesSearch && matchesLocation;
 
   });
 
 
+  // =====================================
+  // Loading
+  // =====================================
+
   if (loading) {
+
     return <h2>Loading jobs...</h2>;
+
   }
 
+
+  // =====================================
+  // Error
+  // =====================================
 
   if (error) {
+
     return <h2>{error}</h2>;
+
   }
 
+
+  // =====================================
+  // Page
+  // =====================================
 
   return (
 
     <div className="jobs-page">
 
+
+      {/* ============================= */}
       {/* Hero Section */}
+      {/* ============================= */}
 
       <section className="jobs-hero">
 
@@ -122,7 +355,9 @@ const matchedJobs = jobsData.filter((job) => {
       </section>
 
 
+      {/* ============================= */}
       {/* Search Section */}
+      {/* ============================= */}
 
       <div className="search-container">
 
@@ -131,7 +366,9 @@ const matchedJobs = jobsData.filter((job) => {
           placeholder="Search by job title or company"
           className="search-box"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) =>
+            setSearchTerm(e.target.value)
+          }
         />
 
         <input
@@ -139,7 +376,9 @@ const matchedJobs = jobsData.filter((job) => {
           placeholder="Location"
           className="search-box"
           value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          onChange={(e) =>
+            setLocation(e.target.value)
+          }
         />
 
         <button className="search-button">
@@ -149,7 +388,9 @@ const matchedJobs = jobsData.filter((job) => {
       </div>
 
 
+      {/* ============================= */}
       {/* Recommended Jobs */}
+      {/* ============================= */}
 
       {recommendedJobs.length > 0 && (
 
@@ -159,9 +400,10 @@ const matchedJobs = jobsData.filter((job) => {
             ⭐ Recommended Jobs
           </h2>
 
+
           <div className="jobs-grid">
 
-            {recommendedJobs.map((job) => (
+            {recommendedJobs.map(job => (
 
               <div
                 className="job-card recommended-card"
@@ -173,8 +415,13 @@ const matchedJobs = jobsData.filter((job) => {
                 <div className="job-card-header">
 
                   <div className="company-logo">
-                    {job.company.charAt(0).toUpperCase()}
+
+                    {job.company
+                      .charAt(0)
+                      .toUpperCase()}
+
                   </div>
+
 
                   <div>
 
@@ -221,6 +468,8 @@ const matchedJobs = jobsData.filter((job) => {
                 </div>
 
 
+                {/* View Details */}
+
                 <button
                   className="view-button"
                   onClick={() =>
@@ -241,14 +490,14 @@ const matchedJobs = jobsData.filter((job) => {
       )}
 
 
+      {/* ============================= */}
       {/* Available Jobs */}
+      {/* ============================= */}
 
       <h2 className="jobs-section-title">
         Available Jobs
       </h2>
 
-
-      {/* No Jobs */}
 
       {filteredJobs.length === 0 ? (
 
@@ -260,7 +509,7 @@ const matchedJobs = jobsData.filter((job) => {
 
         <div className="jobs-grid">
 
-          {filteredJobs.map((job) => (
+          {filteredJobs.map(job => (
 
             <div
               className="job-card"
@@ -272,8 +521,13 @@ const matchedJobs = jobsData.filter((job) => {
               <div className="job-card-header">
 
                 <div className="company-logo">
-                  {job.company.charAt(0).toUpperCase()}
+
+                  {job.company
+                    .charAt(0)
+                    .toUpperCase()}
+
                 </div>
+
 
                 <div>
 
@@ -305,7 +559,7 @@ const matchedJobs = jobsData.filter((job) => {
               </div>
 
 
-              {/* Job Tags */}
+              {/* Tags */}
 
               <div className="job-tags">
 
@@ -319,6 +573,8 @@ const matchedJobs = jobsData.filter((job) => {
 
               </div>
 
+
+              {/* View Details */}
 
               <button
                 className="view-button"
@@ -340,6 +596,7 @@ const matchedJobs = jobsData.filter((job) => {
     </div>
 
   );
+
 }
 
 export default Jobs;

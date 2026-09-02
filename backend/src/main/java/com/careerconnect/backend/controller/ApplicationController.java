@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.careerconnect.backend.model.Application;
 import com.careerconnect.backend.service.ApplicationService;
@@ -47,4 +48,24 @@ public class ApplicationController {
 
         return applicationService.getApplicationsByStudent(studentId);
     }
+    @PostMapping("/applications/{applicationId}/status")
+public ResponseEntity<?> updateApplicationStatus(
+        @PathVariable int applicationId,
+        @RequestParam String status) {
+
+    try {
+
+        Application application =
+                applicationService.updateApplicationStatus(
+                        applicationId, status);
+
+        return ResponseEntity.ok(application);
+
+    } catch (RuntimeException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+}
 }

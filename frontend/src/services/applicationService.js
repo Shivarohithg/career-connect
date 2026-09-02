@@ -17,3 +17,17 @@ export const getApplicationsByStudent = async (studentId) => {
 
     return response.data;
 };
+
+export const updateApplicationStatus = async (applicationId, status) => {
+    const response = await axios.post(
+        `${API_URL}/${applicationId}/status`,
+        null,
+        {
+            params: {
+                status: status
+            }
+        }
+    );
+
+    return response.data;
+};

@@ -58,4 +58,19 @@ public class ApplicationService {
 
     return applicationRepository.findByStudent(student);
 }
+public Application updateApplicationStatus(int applicationId, String status) {
+
+    Application application = applicationRepository.findById(applicationId)
+            .orElseThrow(() ->
+                    new RuntimeException("Application not found"));
+
+    if (!status.equals("ACCEPTED") && !status.equals("REJECTED")) {
+        throw new RuntimeException(
+                "Status must be ACCEPTED or REJECTED");
+    }
+
+    application.setStatus(status);
+
+    return applicationRepository.save(application);
+}
 }
