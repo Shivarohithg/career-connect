@@ -1,36 +1,68 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Home from "./pages/Home/Home";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
+
+import Dashboard from "./pages/Dashboard/Dashboard";
+
+import Jobs from "./pages/Jobs/Jobs";
 import JobDetails from "./pages/JobDetails/JobDetails";
+
 import MyApplications from "./pages/MyApplications/MyApplications";
 import Applications from "./pages/Applications/Applications";
 
-import Navbar from "./components/Navbar/Navbar";
-import Jobs from "./pages/Jobs/Jobs";
-
-import Home from "./pages/Home/Home";
-import Login from "./pages/Login/Login";
 import MyProfile from "./pages/MyProfile/MyProfile";
-import Register from "./pages/Register/Register";
 import CareerAnalysis from "./pages/CareerAnalysis/CareerAnalysis";
 
+import Navbar from "./components/Navbar/Navbar";
+
+
 function App() {
+
   return (
+
     <BrowserRouter>
 
       <Navbar />
 
       <Routes>
 
-        <Route path="/" element={<Home />} />
+        {/* Home */}
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
-        <Route path="/login" element={<Login />} />
+        {/* Dashboard */}
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
-        <Route path="/register" element={<Register />} />
+        {/* Authentication */}
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-        <Route path="/jobs" element={<Jobs />} />
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
-        <Route path="/jobs/:id" element={<JobDetails />} />
+        {/* Jobs */}
+        <Route
+          path="/jobs"
+          element={<Jobs />}
+        />
 
+        <Route
+          path="/jobs/:id"
+          element={<JobDetails />}
+        />
+
+        {/* Applications */}
         <Route
           path="/my-applications"
           element={<MyApplications />}
@@ -41,11 +73,13 @@ function App() {
           element={<Applications />}
         />
 
+        {/* Profile */}
         <Route
           path="/profile"
           element={<MyProfile />}
         />
 
+        {/* Career Analysis */}
         <Route
           path="/career-analysis"
           element={<CareerAnalysis />}
@@ -54,6 +88,7 @@ function App() {
       </Routes>
 
     </BrowserRouter>
+
   );
 }
 

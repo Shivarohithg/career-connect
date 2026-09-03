@@ -16,6 +16,12 @@ function Navbar() {
                 </li>
 
                 <li>
+                    <Link to="/dashboard">
+                        Dashboard
+                    </Link>
+                </li>
+
+                <li>
                     <Link to="/jobs">Jobs</Link>
                 </li>
 
