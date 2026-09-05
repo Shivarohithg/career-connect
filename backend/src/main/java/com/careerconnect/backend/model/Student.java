@@ -1,4 +1,3 @@
-
 package com.careerconnect.backend.model;
 
 import jakarta.persistence.Entity;
@@ -7,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -29,16 +29,29 @@ public class Student {
     @Max(value = 10, message = "CGPA cannot exceed 10")
     private double cgpa;
 
-    public Student() {
+    @NotBlank(message = "Email cannot be empty")
+    @Email(message = "Enter a valid email")
+    private String email;
 
+    @NotBlank(message = "Password cannot be empty")
+    private String password;
+
+    public Student() {
     }
 
-    public Student(String name, String branch, double cgpa) {
-
+    public Student(String name, String branch, double cgpa,
+                   String email, String password) {
         this.name = name;
         this.branch = branch;
         this.cgpa = cgpa;
+        this.email = email;
+        this.password = password;
     }
+    public Student(String name, String branch, double cgpa) {
+    this.name = name;
+    this.branch = branch;
+    this.cgpa = cgpa;
+}
 
     public int getId() {
         return id;
@@ -56,6 +69,14 @@ public class Student {
         return cgpa;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -66,5 +87,13 @@ public class Student {
 
     public void setCgpa(double cgpa) {
         this.cgpa = cgpa;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

@@ -14,26 +14,57 @@ function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const studentId = 1;
+    // Get logged-in student from localStorage
+    const student = JSON.parse(localStorage.getItem("student"));
+    const studentId = student?.id;
 
     useEffect(() => {
+
+        // Check if user is logged in
+        if (!studentId) {
+            navigate("/login");
+            return;
+        }
 
         const loadDashboard = async () => {
 
             try {
 
-                const [profileResponse, analysisResponse, applicationsResponse] =
-                    await Promise.all([
-                        axios.get(
-                            `http://localhost:8080/student-profiles/${studentId}`
-                        ),
-                        axios.get(
-                            `http://localhost:8080/career-analysis/${studentId}`
-                        ),
-                        axios.get(
-                            `http://localhost:8080/applications/student/${studentId}`
-                        )
-                    ]);
+                const [
+                    profileResponse,
+                    analysisResponse,
+                    applicationsResponse
+                ] = await Promise.all([
+
+                    // Load student profile
+                    axios.get(
+                        `http://localhost:8080/student-profiles/${studentId}`
+                    ),
+
+                    // Load career analysis
+                    // If analysis does not exist, create it
+                    axios.get(
+                        `http://localhost:8080/career-analysis/${studentId}`
+                    ).catch(async (error) => {
+
+                        if (error.response?.status === 404) {
+
+                            const createResponse = await axios.post(
+                                `http://localhost:8080/career-analysis/${studentId}`
+                            );
+
+                            return createResponse;
+                        }
+
+                        throw error;
+                    }),
+
+                    // Load applications
+                    axios.get(
+                        `http://localhost:8080/applications/student/${studentId}`
+                    )
+
+                ]);
 
                 setProfile(profileResponse.data);
                 setAnalysis(analysisResponse.data);
@@ -54,16 +85,24 @@ function Dashboard() {
 
         loadDashboard();
 
-    }, []);
+    }, [studentId, navigate]);
 
 
     if (loading) {
-        return <h2 className="dashboard-loading">Loading dashboard...</h2>;
+        return (
+            <h2 className="dashboard-loading">
+                Loading dashboard...
+            </h2>
+        );
     }
 
 
     if (error) {
-        return <h2 className="dashboard-error">{error}</h2>;
+        return (
+            <h2 className="dashboard-error">
+                {error}
+            </h2>
+        );
     }
 
 
@@ -71,9 +110,11 @@ function Dashboard() {
         application => application.status === "ACCEPTED"
     ).length;
 
+
     const rejectedCount = applications.filter(
         application => application.status === "REJECTED"
     ).length;
+
 
     const appliedCount = applications.filter(
         application => application.status === "APPLIED"
@@ -401,7 +442,6 @@ function Dashboard() {
             </section>
 
         </div>
-
     );
 }
 

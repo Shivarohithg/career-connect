@@ -56,9 +56,29 @@ public class StudentService {
     }
 
     public Student addStudent(Student student) {
-
         return studentRepository.save(student);
-
     }
 
+    // Register new student
+    public Student registerStudent(Student student) {
+
+        if (studentRepository.existsByEmail(student.getEmail())) {
+            throw new RuntimeException("Email already registered");
+        }
+
+        return studentRepository.save(student);
+    }
+
+    // Login student
+    public Student loginStudent(String email, String password) {
+
+        Student student = studentRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (!student.getPassword().equals(password)) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        return student;
+    }
 }
