@@ -24,6 +24,27 @@ function Jobs() {
       try {
 
         // =====================================
+        // 0. Get logged-in student
+        // =====================================
+
+        const storedStudent =
+          localStorage.getItem("student");
+
+        if (!storedStudent) {
+          navigate("/login");
+          return;
+        }
+
+        const student = JSON.parse(storedStudent);
+        const studentId = student.id;
+
+        console.log(
+          "Logged-in student ID:",
+          studentId
+        );
+
+
+        // =====================================
         // 1. Load all jobs
         // =====================================
 
@@ -37,7 +58,7 @@ function Jobs() {
         // =====================================
 
         const analysisResponse = await axios.get(
-          "http://localhost:8080/career-analysis/1"
+          `http://localhost:8080/career-analysis/${studentId}`
         );
 
         const analysis = analysisResponse.data;
@@ -48,7 +69,7 @@ function Jobs() {
         // =====================================
 
         const profileResponse = await axios.get(
-          "http://localhost:8080/student-profiles/1"
+          `http://localhost:8080/student-profiles/${studentId}`
         );
 
         const profile = profileResponse.data;
@@ -69,8 +90,6 @@ function Jobs() {
         // =====================================
         // 5. Job Role Required Skills
         // =====================================
-        // These match the JobRole data
-        // stored in your database.
 
         const jobRoles = {
 
@@ -140,7 +159,9 @@ function Jobs() {
             const percentage =
               requiredSkills.length > 0
                 ? Math.round(
-                    (matchedSkills.length / requiredSkills.length) * 100
+                    (matchedSkills.length /
+                      requiredSkills.length) *
+                      100
                   )
                 : 0;
 
@@ -163,8 +184,14 @@ function Jobs() {
               .split(",")
               .map(role =>
                 role
-                  .replace(/\(\d+%\s*Match\)/i, "")
-                  .replace(/\(\d+\/\d+\s*skills\)/i, "")
+                  .replace(
+                    /\(\d+%\s*Match\)/i,
+                    ""
+                  )
+                  .replace(
+                    /\(\d+\/\d+\s*skills\)/i,
+                    ""
+                  )
                   .trim()
                   .toLowerCase()
               )
@@ -177,16 +204,19 @@ function Jobs() {
 
         const matchedJobs = jobsData.filter(job => {
 
-          const jobTitle = job.title.toLowerCase();
+          const jobTitle =
+            job.title.toLowerCase();
+
 
           // -------------------------------------
           // Match through Career Analysis
           // -------------------------------------
 
-          const careerAnalysisMatch = analysisRoles.some(
-            role => {
+          const careerAnalysisMatch =
+            analysisRoles.some(role => {
 
-              const roleWords = role.split(" ");
+              const roleWords =
+                role.split(" ");
 
               return roleWords.some(word => {
 
@@ -203,25 +233,26 @@ function Jobs() {
 
               });
 
-            }
-          );
+            });
 
 
           // -------------------------------------
           // Match through Profile Skills
           // -------------------------------------
 
-          const profileSkillMatch = profileSkills.some(
-            skill => jobTitle.includes(skill)
-          );
+          const profileSkillMatch =
+            profileSkills.some(
+              skill =>
+                jobTitle.includes(skill)
+            );
 
 
           // -------------------------------------
           // Match through Job Roles
           // -------------------------------------
 
-          const roleSkillMatch = roleMatches.some(
-            roleData => {
+          const roleSkillMatch =
+            roleMatches.some(roleData => {
 
               // Only consider roles where
               // student has at least one matching skill
@@ -230,10 +261,12 @@ function Jobs() {
                 return false;
               }
 
-              const roleName = roleData.role;
+              const roleName =
+                roleData.role;
 
               // Match meaningful role words
-              const roleWords = roleName.split(" ");
+              const roleWords =
+                roleName.split(" ");
 
               return roleWords.some(word => {
 
@@ -249,8 +282,7 @@ function Jobs() {
 
               });
 
-            }
-          );
+            });
 
 
           return (
@@ -266,9 +298,14 @@ function Jobs() {
 
       } catch (error) {
 
-        console.error("Error loading jobs:", error);
+        console.error(
+          "Error loading jobs:",
+          error
+        );
 
-        setError("Unable to load jobs.");
+        setError(
+          "Unable to load jobs."
+        );
 
       } finally {
 
@@ -281,7 +318,7 @@ function Jobs() {
 
     loadData();
 
-  }, []);
+  }, [navigate]);
 
 
   // =====================================
@@ -299,10 +336,12 @@ function Jobs() {
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
+
     const matchesLocation =
       job.location
         .toLowerCase()
         .includes(location.toLowerCase());
+
 
     return matchesSearch && matchesLocation;
 
@@ -315,7 +354,11 @@ function Jobs() {
 
   if (loading) {
 
-    return <h2>Loading jobs...</h2>;
+    return (
+      <h2>
+        Loading jobs...
+      </h2>
+    );
 
   }
 
@@ -326,7 +369,11 @@ function Jobs() {
 
   if (error) {
 
-    return <h2>{error}</h2>;
+    return (
+      <h2>
+        {error}
+      </h2>
+    );
 
   }
 
@@ -346,10 +393,13 @@ function Jobs() {
 
       <section className="jobs-hero">
 
-        <h1>Find Your Next Opportunity</h1>
+        <h1>
+          Find Your Next Opportunity
+        </h1>
 
         <p>
-          Discover jobs that match your skills and career goals.
+          Discover jobs that match your
+          skills and career goals.
         </p>
 
       </section>
@@ -447,7 +497,10 @@ function Jobs() {
                   </p>
 
                   <p className="job-salary">
-                    ₹{job.salary.toLocaleString("en-IN")}
+                    ₹
+                    {job.salary.toLocaleString(
+                      "en-IN"
+                    )}
                   </p>
 
                 </div>
@@ -473,7 +526,9 @@ function Jobs() {
                 <button
                   className="view-button"
                   onClick={() =>
-                    navigate(`/jobs/${job.id}`)
+                    navigate(
+                      `/jobs/${job.id}`
+                    )
                   }
                 >
                   View Details
@@ -553,7 +608,10 @@ function Jobs() {
                 </p>
 
                 <p className="job-salary">
-                  ₹{job.salary.toLocaleString("en-IN")}
+                  ₹
+                  {job.salary.toLocaleString(
+                    "en-IN"
+                  )}
                 </p>
 
               </div>
@@ -579,7 +637,9 @@ function Jobs() {
               <button
                 className="view-button"
                 onClick={() =>
-                  navigate(`/jobs/${job.id}`)
+                  navigate(
+                    `/jobs/${job.id}`
+                  )
                 }
               >
                 View Details

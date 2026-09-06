@@ -14,8 +14,22 @@ function MyApplications() {
 
             try {
 
-                // Temporary student ID for testing
-                const studentId = 1;
+                // Get logged-in student
+                const storedStudent =
+                    localStorage.getItem("student");
+
+                if (!storedStudent) {
+                    setError("Please login first.");
+                    setLoading(false);
+                    return;
+                }
+
+                const student =
+                    JSON.parse(storedStudent);
+
+                const studentId = student.id;
+
+                console.log("Logged-in student ID:", studentId);
 
                 const data =
                     await getApplicationsByStudent(studentId);
@@ -84,7 +98,7 @@ function MyApplications() {
 
                                 <div className="company-logo">
                                     {application.job.company
-                                        .charAt(0)
+                                        ?.charAt(0)
                                         .toUpperCase()}
                                 </div>
 
@@ -110,7 +124,7 @@ function MyApplications() {
 
                                 <p>
                                     💰 ₹
-                                    {application.job.salary.toLocaleString(
+                                    {application.job.salary?.toLocaleString(
                                         "en-IN"
                                     )}
                                 </p>
@@ -122,17 +136,17 @@ function MyApplications() {
 
                             </div>
 
-<div className="application-status">
+                            <div className="application-status">
 
-    <span
-        className={`status-${application.status
-            ?.toLowerCase()
-            .replace(/\s+/g, "-")}`}
-    >
-        {application.status}
-    </span>
+                                <span
+                                    className={`status-${application.status
+                                        ?.toLowerCase()
+                                        .replace(/\s+/g, "-")}`}
+                                >
+                                    {application.status}
+                                </span>
 
-</div>
+                            </div>
 
                         </div>
 

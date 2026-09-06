@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./MyProfile.css";
 
 function MyProfile() {
+
+    const navigate = useNavigate();
 
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -23,14 +26,20 @@ function MyProfile() {
         resumePath: ""
     });
 
+    // Get logged-in student
+    const student = JSON.parse(localStorage.getItem("student"));
+    const studentId = student?.id;
+
     useEffect(() => {
+
+        if (!studentId) {
+            navigate("/login");
+            return;
+        }
 
         const loadProfile = async () => {
 
             try {
-
-                // Temporary student ID for testing
-                const studentId = 1;
 
                 const response = await axios.get(
                     `http://localhost:8080/student-profiles/${studentId}`
@@ -56,12 +65,14 @@ function MyProfile() {
             } finally {
 
                 setLoading(false);
+
             }
         };
 
         loadProfile();
 
-    }, []);
+    }, [studentId, navigate]);
+
 
     const handleChange = (e) => {
 
@@ -72,13 +83,13 @@ function MyProfile() {
 
     };
 
+
     const handleSave = async () => {
 
         try {
 
             setSaving(true);
-
-            const studentId = 1;
+            setError("");
 
             const response = await axios.put(
                 `http://localhost:8080/student-profiles/${studentId}`,
@@ -101,8 +112,10 @@ function MyProfile() {
         } finally {
 
             setSaving(false);
+
         }
     };
+
 
     const handleResumeUpload = async () => {
 
@@ -119,8 +132,6 @@ function MyProfile() {
         try {
 
             setUploadingResume(true);
-
-            const studentId = 1;
 
             const uploadData = new FormData();
 
@@ -162,20 +173,25 @@ function MyProfile() {
         } finally {
 
             setUploadingResume(false);
+
         }
     };
+
 
     if (loading) {
         return <h2>Loading profile...</h2>;
     }
 
+
     if (error && !profile) {
         return <h2>{error}</h2>;
     }
 
+
     if (!profile) {
         return <h2>Profile not found.</h2>;
     }
+
 
     return (
         <div className="profile-page">
@@ -203,11 +219,13 @@ function MyProfile() {
 
             </div>
 
+
             {error && (
                 <p className="profile-error">
                     {error}
                 </p>
             )}
+
 
             {editing ? (
 

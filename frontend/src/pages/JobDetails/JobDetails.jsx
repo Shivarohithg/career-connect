@@ -51,8 +51,35 @@ function JobDetails() {
             setApplying(true);
             setApplicationMessage("");
 
-            // Temporary student ID for testing
-            const studentId = 1;
+            // Get logged-in student
+            const storedStudent = localStorage.getItem("student");
+
+            if (!storedStudent) {
+
+                setApplicationMessage(
+                    "Please login first to apply for a job."
+                );
+
+                navigate("/login");
+
+                return;
+            }
+
+            const student = JSON.parse(storedStudent);
+
+            const studentId = student.id;
+
+            console.log("Applying with student ID:", studentId);
+            console.log("Job ID:", id);
+
+            if (!studentId) {
+
+                setApplicationMessage(
+                    "Student information is missing. Please login again."
+                );
+
+                return;
+            }
 
             await applyForJob(studentId, id);
 
@@ -64,9 +91,17 @@ function JobDetails() {
 
             console.error("Error applying for job:", error);
 
-            if (error.response?.data) {
+            if (error.response?.status === 409) {
 
-                setApplicationMessage(error.response.data);
+                setApplicationMessage(
+                    "You have already applied for this job."
+                );
+
+            } else if (error.response?.data) {
+
+                setApplicationMessage(
+                    error.response.data
+                );
 
             } else {
 
