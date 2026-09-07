@@ -31,3 +31,16 @@
 .navLinks a:hover{
     color:#dbeafe;
 }
+
+.logoutButton {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+}
+
+.logoutButton:hover {
+    color: #007bff;
+}

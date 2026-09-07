@@ -16,6 +16,7 @@ import MyProfile from "./pages/MyProfile/MyProfile";
 import CareerAnalysis from "./pages/CareerAnalysis/CareerAnalysis";
 
 import Navbar from "./components/Navbar/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 function App() {
@@ -34,11 +35,6 @@ function App() {
           element={<Home />}
         />
 
-        {/* Dashboard */}
-        <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
 
         {/* Authentication */}
         <Route
@@ -51,38 +47,79 @@ function App() {
           element={<Register />}
         />
 
+
+        {/* Dashboard */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+
         {/* Jobs */}
         <Route
           path="/jobs"
-          element={<Jobs />}
+          element={
+            <ProtectedRoute>
+              <Jobs />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/jobs/:id"
-          element={<JobDetails />}
+          element={
+            <ProtectedRoute>
+              <JobDetails />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Applications */}
+
+        {/* My Applications */}
         <Route
           path="/my-applications"
-          element={<MyApplications />}
+          element={
+            <ProtectedRoute>
+              <MyApplications />
+            </ProtectedRoute>
+          }
         />
 
+
+        {/* Applications - Admin */}
         <Route
           path="/applications"
-          element={<Applications />}
+          element={
+            <ProtectedRoute>
+              <Applications />
+            </ProtectedRoute>
+          }
         />
+
 
         {/* Profile */}
         <Route
           path="/profile"
-          element={<MyProfile />}
+          element={
+            <ProtectedRoute>
+              <MyProfile />
+            </ProtectedRoute>
+          }
         />
+
 
         {/* Career Analysis */}
         <Route
           path="/career-analysis"
-          element={<CareerAnalysis />}
+          element={
+            <ProtectedRoute>
+              <CareerAnalysis />
+            </ProtectedRoute>
+          }
         />
 
       </Routes>
@@ -92,4 +129,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 

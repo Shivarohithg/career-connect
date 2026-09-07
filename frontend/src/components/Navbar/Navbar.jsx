@@ -1,7 +1,22 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 
+
 function Navbar() {
+
+    const navigate = useNavigate();
+
+    const student = JSON.parse(
+        localStorage.getItem("student")
+    );
+
+    const handleLogout = () => {
+
+        localStorage.removeItem("student");
+
+        navigate("/login");
+    };
+
     return (
         <nav className={styles.navbar}>
 
@@ -12,44 +27,67 @@ function Navbar() {
             <ul className={styles.navLinks}>
 
                 <li>
-                    <Link to="/">Home</Link>
+                    <a href="/">Home</a>
                 </li>
 
-                <li>
-                    <Link to="/dashboard">
-                        Dashboard
-                    </Link>
-                </li>
+                {student && (
+                    <>
+                        <li>
+                            <a href="/dashboard">
+                                Dashboard
+                            </a>
+                        </li>
 
-                <li>
-                    <Link to="/jobs">Jobs</Link>
-                </li>
+                        <li>
+                            <a href="/jobs">
+                                Jobs
+                            </a>
+                        </li>
 
-                <li>
-                    <Link to="/career-analysis">
-                        Career Analysis
-                    </Link>
-                </li>
+                        <li>
+                            <a href="/career-analysis">
+                                Career Analysis
+                            </a>
+                        </li>
 
-                <li>
-                    <Link to="/my-applications">
-                        My Applications
-                    </Link>
-                </li>
+                        <li>
+                            <a href="/my-applications">
+                                My Applications
+                            </a>
+                        </li>
 
-                <li>
-                    <Link to="/profile">
-                        My Profile
-                    </Link>
-                </li>
+                        <li>
+                            <a href="/profile">
+                                My Profile
+                            </a>
+                        </li>
 
-                <li>
-                    <Link to="/login">Login</Link>
-                </li>
+                        <li>
+                            <button
+                                className={styles.logoutButton}
+                                onClick={handleLogout}
+                            >
+                                Logout
+                            </button>
+                        </li>
+                    </>
+                )}
 
-                <li>
-                    <Link to="/register">Register</Link>
-                </li>
+                {!student && (
+                    <>
+                        <li>
+                            <a href="/login">
+                                Login
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="/register">
+                                Register
+                            </a>
+                        </li>
+                    </>
+                )}
 
             </ul>
 
