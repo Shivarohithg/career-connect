@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-
-
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
@@ -19,116 +17,132 @@ import CareerAnalysis from "./pages/CareerAnalysis/CareerAnalysis";
 
 import Navbar from "./components/Navbar/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
 
 function App() {
 
-  return (
+    return (
 
-    <BrowserRouter>
+        <BrowserRouter>
 
-      <Navbar />
+            <Navbar />
 
-      <Routes>
+            <Routes>
 
-        {/* Home */}
-        <Route
-          path="/"
-          element={<Home />}
-        />
-
-
-        {/* Authentication */}
-        <Route
-          path="/login"
-          element={<Login />}
-        />
-
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+                {/* Home */}
+                <Route
+                    path="/"
+                    element={<Home />}
+                />
 
 
-        {/* Dashboard */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+                {/* Authentication */}
+
+                <Route
+                    path="/login"
+                    element={
+                        <PublicRoute>
+                            <Login />
+                        </PublicRoute>
+                    }
+                />
+
+                <Route
+                    path="/register"
+                    element={
+                        <PublicRoute>
+                            <Register />
+                        </PublicRoute>
+                    }
+                />
 
 
-        {/* Jobs */}
-        <Route
-          path="/jobs"
-          element={
-            <ProtectedRoute>
-              <Jobs />
-            </ProtectedRoute>
-          }
-        />
+                {/* Dashboard */}
 
-        <Route
-          path="/jobs/:id"
-          element={
-            <ProtectedRoute>
-              <JobDetails />
-            </ProtectedRoute>
-          }
-        />
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
 
 
-        {/* My Applications */}
-        <Route
-          path="/my-applications"
-          element={
-            <ProtectedRoute>
-              <MyApplications />
-            </ProtectedRoute>
-          }
-        />
+                {/* Jobs */}
+
+                <Route
+                    path="/jobs"
+                    element={
+                        <ProtectedRoute>
+                            <Jobs />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/jobs/:id"
+                    element={
+                        <ProtectedRoute>
+                            <JobDetails />
+                        </ProtectedRoute>
+                    }
+                />
 
 
-        {/* Applications - Admin */}
-        <Route
-          path="/applications"
-          element={
-            <ProtectedRoute>
-              <Applications />
-            </ProtectedRoute>
-          }
-        />
+                {/* My Applications */}
+
+                <Route
+                    path="/my-applications"
+                    element={
+                        <ProtectedRoute>
+                            <MyApplications />
+                        </ProtectedRoute>
+                    }
+                />
 
 
-        {/* Profile */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <MyProfile />
-            </ProtectedRoute>
-          }
-        />
+                {/* Applications - Admin */}
+
+                <Route
+                    path="/applications"
+                    element={
+                        <ProtectedRoute>
+                            <Applications />
+                        </ProtectedRoute>
+                    }
+                />
 
 
-        {/* Career Analysis */}
-        <Route
-          path="/career-analysis"
-          element={
-            <ProtectedRoute>
-              <CareerAnalysis />
-            </ProtectedRoute>
-          }
-        />
+                {/* Profile */}
 
-      </Routes>
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <MyProfile />
+                        </ProtectedRoute>
+                    }
+                />
 
-    </BrowserRouter>
 
-  );
+                {/* Career Analysis */}
+
+                <Route
+                    path="/career-analysis"
+                    element={
+                        <ProtectedRoute>
+                            <CareerAnalysis />
+                        </ProtectedRoute>
+                    }
+                />
+
+            </Routes>
+
+        </BrowserRouter>
+
+    );
 }
 
-export default App; 
+export default App;
