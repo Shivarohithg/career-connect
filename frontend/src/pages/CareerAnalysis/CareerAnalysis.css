@@ -115,3 +115,74 @@
 .skill-gap {
     color: #b45309;
 }
+
+/* AI Career Insights */
+
+.ai-career-card {
+    border-left: 5px solid #4f46e5;
+}
+
+.ai-advice {
+    margin-top: 15px;
+    line-height: 1.7;
+}
+
+.ai-advice p {
+    margin: 8px 0;
+}
+
+
+/* Career Score */
+
+.career-score-card {
+    margin-top: 20px;
+}
+
+.career-score {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    margin: 20px 0;
+}
+
+.score-number {
+    font-size: 42px;
+    font-weight: bold;
+}
+
+.score-text p {
+    margin-top: 5px;
+}
+
+
+/* Learning Roadmap */
+
+.roadmap {
+    margin-top: 20px;
+}
+
+.roadmap-step {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+}
+
+.roadmap-number {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 1px solid currentColor;
+}
+
+.roadmap-step h3 {
+    margin: 0;
+}
+
+.roadmap-step p {
+    margin: 5px 0 0;
+}

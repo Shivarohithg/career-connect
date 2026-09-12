@@ -70,15 +70,24 @@ public class StudentService {
     }
 
     // Login student
-    public Student loginStudent(String email, String password) {
+// Login student
+public Student loginStudent(String email, String password) {
 
-        Student student = studentRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+    System.out.println("LOGIN EMAIL: " + email);
 
-        if (!student.getPassword().equals(password)) {
-            throw new RuntimeException("Invalid email or password");
-        }
+    Student student = studentRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new RuntimeException("EMAIL NOT FOUND"));
 
-        return student;
+    System.out.println("STUDENT FOUND: " + student.getEmail());
+
+    if (!student.getPassword().equals(password)) {
+        System.out.println("PASSWORD DOES NOT MATCH");
+        throw new RuntimeException("PASSWORD DOES NOT MATCH");
     }
+
+    System.out.println("LOGIN SUCCESS");
+
+    return student;
 }
+    }
