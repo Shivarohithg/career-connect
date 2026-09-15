@@ -4,6 +4,10 @@
     background: #f7f9fc;
 }
 
+/* =====================================
+   HERO
+===================================== */
+
 .jobs-hero {
     text-align: center;
     margin-bottom: 40px;
@@ -20,6 +24,11 @@
     color: #6b7280;
 }
 
+
+/* =====================================
+   SEARCH
+===================================== */
+
 .search-container {
     display: flex;
     gap: 15px;
@@ -34,6 +43,7 @@
     border-radius: 10px;
     font-size: 16px;
     outline: none;
+    background: white;
 }
 
 .search-box:focus {
@@ -48,11 +58,17 @@
     color: white;
     font-size: 16px;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .search-button:hover {
     background: #1d4ed8;
 }
+
+
+/* =====================================
+   SECTION HEADINGS
+===================================== */
 
 .jobs-section-title {
     font-size: 28px;
@@ -60,116 +76,128 @@
     margin-bottom: 25px;
 }
 
+.ai-jobs-heading {
+    margin-bottom: 25px;
+}
+
+.ai-jobs-heading .jobs-section-title {
+    margin-bottom: 6px;
+}
+
+.ai-jobs-heading p {
+    color: #6b7280;
+    font-size: 16px;
+}
+
+
+/* =====================================
+   JOB GRID
+===================================== */
+
 .jobs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(300px, 1fr)
+    );
     gap: 25px;
 }
 
+
+/* =====================================
+   JOB CARD
+===================================== */
+
 .job-card {
+    position: relative;
+
     background: white;
     padding: 25px;
+
     border-radius: 16px;
     border: 1px solid #e5e7eb;
-    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .job-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.10);
+
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.10);
 }
 
-.job-title {
-    font-size: 23px;
-    color: #111827;
-    margin-bottom: 10px;
+
+/* =====================================
+   AI RECOMMENDED CARD
+===================================== */
+
+.recommended-card {
+    border: 2px solid #2563eb;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f8fbff 100%
+        );
 }
 
-.job-company {
-    font-size: 17px;
-    font-weight: 600;
-    color: #2563eb;
-    margin-bottom: 15px;
+.recommended-card:hover {
+    border-color: #1d4ed8;
+
+    box-shadow:
+        0 12px 30px rgba(37, 99, 235, 0.15);
 }
 
-.job-info {
-    color: #6b7280;
-    margin: 8px 0;
-}
 
-.job-salary {
-    font-size: 18px;
-    font-weight: 700;
-    color: #111827;
-    margin-top: 15px;
-}
+/* =====================================
+   AI MATCH BADGE
+===================================== */
 
-.job-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 20px 0;
-}
+.ai-match-badge {
+    display: inline-flex;
 
-.job-tag {
-    padding: 6px 12px;
+    align-items: center;
+    justify-content: center;
+
+    padding: 7px 13px;
+
+    margin-bottom: 18px;
+
     border-radius: 20px;
+
     background: #eff6ff;
-    color: #2563eb;
-    font-size: 13px;
-    font-weight: 600;
+    color: #1d4ed8;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    border: 1px solid #bfdbfe;
 }
 
-.view-button {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background: #2563eb;
-    color: white;
-    font-size: 15px;
-    cursor: pointer;
-}
 
-.view-button:hover {
-    background: #1d4ed8;
-}
+/* =====================================
+   JOB HEADER
+===================================== */
 
-.no-jobs {
-    text-align: center;
-    color: #6b7280;
-    font-size: 18px;
-}
-
-@media (max-width: 700px) {
-
-    .jobs-page {
-        padding: 35px 5%;
-    }
-
-    .jobs-hero h1 {
-        font-size: 32px;
-    }
-
-    .search-container {
-        flex-direction: column;
-    }
-
-    .search-button {
-        width: 100%;
-    }
-}
 .job-card-header {
     display: flex;
     align-items: center;
     gap: 15px;
+
     margin-bottom: 20px;
 }
 
 .company-logo {
     width: 50px;
     height: 50px;
+
     border-radius: 12px;
 
     display: flex;
@@ -185,6 +213,24 @@
     flex-shrink: 0;
 }
 
+.job-title {
+    font-size: 23px;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.job-company {
+    font-size: 17px;
+    font-weight: 600;
+    color: #2563eb;
+    margin-bottom: 15px;
+}
+
+
+/* =====================================
+   JOB DETAILS
+===================================== */
+
 .job-details {
     display: flex;
     justify-content: space-between;
@@ -192,6 +238,190 @@
 
     margin: 15px 0;
 }
+
+.job-info {
+    color: #6b7280;
+    margin: 8px 0;
+}
+
+.job-salary {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 15px;
+}
+
+
+/* =====================================
+   AI CAREER DIRECTION
+===================================== */
+
+.ai-role {
+    margin-top: 18px;
+    padding: 14px;
+
+    border-radius: 10px;
+
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+}
+
+.ai-role strong {
+    display: block;
+
+    color: #5b21b6;
+    font-size: 14px;
+
+    margin-bottom: 6px;
+}
+
+.ai-role p {
+    margin: 0;
+
+    color: #4c1d95;
+    font-weight: 600;
+}
+
+
+/* =====================================
+   AI SKILLS
+===================================== */
+
+.ai-skills {
+    margin-top: 18px;
+}
+
+.ai-skills strong {
+    display: block;
+
+    color: #374151;
+    font-size: 14px;
+
+    margin-bottom: 9px;
+}
+
+.ai-skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.ai-skill {
+    display: inline-flex;
+
+    padding: 6px 10px;
+
+    border-radius: 16px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ai-skill.matched {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.ai-skill.missing {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+
+/* =====================================
+   AI EXPLANATION
+===================================== */
+
+.ai-explanation {
+    margin-top: 18px;
+
+    padding: 15px;
+
+    border-radius: 10px;
+
+    background: #f9fafb;
+    border-left: 4px solid #2563eb;
+}
+
+.ai-explanation strong {
+    display: block;
+
+    color: #1f2937;
+    font-size: 14px;
+
+    margin-bottom: 7px;
+}
+
+.ai-explanation p {
+    margin: 0;
+
+    color: #6b7280;
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* =====================================
+   TAGS
+===================================== */
+
+.job-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin: 20px 0;
+}
+
+.job-tag {
+    padding: 6px 12px;
+
+    border-radius: 20px;
+
+    background: #eff6ff;
+    color: #2563eb;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =====================================
+   VIEW BUTTON
+===================================== */
+
+.view-button {
+    width: 100%;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.view-button:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+
+/* =====================================
+   OLD RECOMMENDATION SUPPORT
+===================================== */
 
 .recommended-section {
     margin: 30px 0 45px;
@@ -213,12 +443,54 @@
     border: 2px solid #2563eb;
 }
 
-.recommended-card {
-  border: 2px solid #2563eb;
+.recommended-card .job-tag:first-child {
+    background-color: #e0edff;
+    color: #2563eb;
+    font-weight: 600;
 }
 
-.recommended-card .job-tag:first-child {
-  background-color: #e0edff;
-  color: #2563eb;
-  font-weight: 600;
+
+/* =====================================
+   NO JOBS
+===================================== */
+
+.no-jobs {
+    text-align: center;
+    color: #6b7280;
+    font-size: 18px;
+    padding: 30px;
+}
+
+
+/* =====================================
+   MOBILE
+===================================== */
+
+@media (max-width: 700px) {
+
+    .jobs-page {
+        padding: 35px 5%;
+    }
+
+    .jobs-hero h1 {
+        font-size: 32px;
+    }
+
+    .search-container {
+        flex-direction: column;
+    }
+
+    .search-button {
+        width: 100%;
+    }
+
+    .job-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .ai-match-badge {
+        font-size: 13px;
+    }
 }

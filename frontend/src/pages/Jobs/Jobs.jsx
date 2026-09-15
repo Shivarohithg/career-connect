@@ -6,656 +6,630 @@ import "./Jobs.css";
 
 function Jobs() {
 
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  const [jobs, setJobs] = useState([]);
-  const [recommendedJobs, setRecommendedJobs] = useState([]);
+    const [jobs, setJobs] = useState([]);
+    const [recommendedJobs, setRecommendedJobs] = useState([]);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [location, setLocation] = useState("");
 
-  useEffect(() => {
+    useEffect(() => {
 
-    const loadData = async () => {
+        const loadData = async () => {
 
-      try {
+            try {
 
-        // =====================================
-        // 0. Get logged-in student
-        // =====================================
+                // =====================================
+                // 1. Get logged-in student
+                // =====================================
 
-        const storedStudent =
-          localStorage.getItem("student");
+                const storedStudent =
+                    localStorage.getItem("student");
 
-        if (!storedStudent) {
-          navigate("/login");
-          return;
-        }
+                if (!storedStudent) {
+                    navigate("/login");
+                    return;
+                }
 
-        const student = JSON.parse(storedStudent);
-        const studentId = student.id;
+                const student =
+                    JSON.parse(storedStudent);
 
-        console.log(
-          "Logged-in student ID:",
-          studentId
-        );
+                const studentId = student.id;
 
-
-        // =====================================
-        // 1. Load all jobs
-        // =====================================
-
-        const jobsData = await getAllJobs();
-
-        setJobs(jobsData);
+                console.log(
+                    "Logged-in student ID:",
+                    studentId
+                );
 
 
-        // =====================================
-        // 2. Load Career Analysis
-        // =====================================
+                // =====================================
+                // 2. Load all jobs
+                // =====================================
 
-        const analysisResponse = await axios.get(
-          `http://localhost:8080/career-analysis/${studentId}`
-        );
+                const jobsData =
+                    await getAllJobs();
 
-        const analysis = analysisResponse.data;
-
-
-        // =====================================
-        // 3. Load Student Profile
-        // =====================================
-
-        const profileResponse = await axios.get(
-          `http://localhost:8080/student-profiles/${studentId}`
-        );
-
-        const profile = profileResponse.data;
+                setJobs(jobsData);
 
 
-        // =====================================
-        // 4. Student Profile Skills
-        // =====================================
+                // =====================================
+                // 3. Load AI Job Recommendations
+                // =====================================
 
-        const profileSkills = profile.skills
-          ? profile.skills
-              .split(",")
-              .map(skill => skill.trim().toLowerCase())
-              .filter(skill => skill.length > 2)
-          : [];
+                const recommendationResponse =
+                    await axios.get(
+                        `http://localhost:8080/ai/job-recommendations/${studentId}`
+                    );
+
+                const recommendations =
+                    recommendationResponse.data;
+
+                console.log(
+                    "AI Job Recommendations:",
+                    recommendations
+                );
+
+                setRecommendedJobs(
+                    recommendations
+                );
 
 
-        // =====================================
-        // 5. Job Role Required Skills
-        // =====================================
+            } catch (error) {
 
-        const jobRoles = {
+                console.error(
+                    "Error loading jobs:",
+                    error
+                );
 
-          "java backend developer": [
-            "java",
-            "spring boot",
-            "sql"
-          ],
+                setError(
+                    error.response?.data ||
+                    "Unable to load jobs."
+                );
 
-          "full stack developer": [
-            "javascript",
-            "react",
-            "html",
-            "css",
-            "node.js"
-          ],
+            } finally {
 
-          "frontend developer": [
-            "html",
-            "css",
-            "javascript",
-            "react",
-            "git"
-          ],
+                setLoading(false);
 
-          "python developer": [
-            "python",
-            "sql",
-            "git",
-            "rest apis"
-          ],
-
-          "software engineer": [
-            "java",
-            "dsa",
-            "oop",
-            "git",
-            "sql"
-          ],
-
-          "data analyst": [
-            "python",
-            "sql",
-            "excel",
-            "statistics",
-            "power bi"
-          ]
-
+            }
         };
 
 
-        // =====================================
-        // 6. Calculate Profile → Role Match
-        // =====================================
+        loadData();
 
-        const roleMatches = Object.entries(jobRoles).map(
-          ([role, requiredSkills]) => {
+    }, [navigate]);
 
-            const matchedSkills = requiredSkills.filter(
-              requiredSkill =>
-                profileSkills.some(profileSkill =>
-                  profileSkill.includes(requiredSkill) ||
-                  requiredSkill.includes(profileSkill)
-                )
+
+    // =====================================
+    // Search + Location Filtering
+    // =====================================
+
+    const filteredJobs =
+        jobs.filter(job => {
+
+            const matchesSearch =
+                job.title
+                    .toLowerCase()
+                    .includes(
+                        searchTerm.toLowerCase()
+                    ) ||
+
+                job.company
+                    .toLowerCase()
+                    .includes(
+                        searchTerm.toLowerCase()
+                    );
+
+
+            const matchesLocation =
+                job.location
+                    .toLowerCase()
+                    .includes(
+                        location.toLowerCase()
+                    );
+
+
+            return (
+                matchesSearch &&
+                matchesLocation
             );
-
-            const percentage =
-              requiredSkills.length > 0
-                ? Math.round(
-                    (matchedSkills.length /
-                      requiredSkills.length) *
-                      100
-                  )
-                : 0;
-
-            return {
-              role,
-              percentage,
-              matchedSkills
-            };
-
-          }
-        );
-
-
-        // =====================================
-        // 7. Get Career Analysis Roles
-        // =====================================
-
-        const analysisRoles = analysis.recommendedRoles
-          ? analysis.recommendedRoles
-              .split(",")
-              .map(role =>
-                role
-                  .replace(
-                    /\(\d+%\s*Match\)/i,
-                    ""
-                  )
-                  .replace(
-                    /\(\d+\/\d+\s*skills\)/i,
-                    ""
-                  )
-                  .trim()
-                  .toLowerCase()
-              )
-          : [];
-
-
-        // =====================================
-        // 8. Find Recommended Jobs
-        // =====================================
-
-        const matchedJobs = jobsData.filter(job => {
-
-          const jobTitle =
-            job.title.toLowerCase();
-
-
-          // -------------------------------------
-          // Match through Career Analysis
-          // -------------------------------------
-
-          const careerAnalysisMatch =
-            analysisRoles.some(role => {
-
-              const roleWords =
-                role.split(" ");
-
-              return roleWords.some(word => {
-
-                // Ignore generic words
-                if (
-                  word.length <= 2 ||
-                  word === "developer" ||
-                  word === "engineer"
-                ) {
-                  return false;
-                }
-
-                return jobTitle.includes(word);
-
-              });
-
-            });
-
-
-          // -------------------------------------
-          // Match through Profile Skills
-          // -------------------------------------
-
-          const profileSkillMatch =
-            profileSkills.some(
-              skill =>
-                jobTitle.includes(skill)
-            );
-
-
-          // -------------------------------------
-          // Match through Job Roles
-          // -------------------------------------
-
-          const roleSkillMatch =
-            roleMatches.some(roleData => {
-
-              // Only consider roles where
-              // student has at least one matching skill
-
-              if (roleData.percentage === 0) {
-                return false;
-              }
-
-              const roleName =
-                roleData.role;
-
-              // Match meaningful role words
-              const roleWords =
-                roleName.split(" ");
-
-              return roleWords.some(word => {
-
-                if (
-                  word.length <= 2 ||
-                  word === "developer" ||
-                  word === "engineer"
-                ) {
-                  return false;
-                }
-
-                return jobTitle.includes(word);
-
-              });
-
-            });
-
-
-          return (
-            careerAnalysisMatch ||
-            profileSkillMatch ||
-            roleSkillMatch
-          );
 
         });
 
 
-        setRecommendedJobs(matchedJobs);
+    // =====================================
+    // Loading
+    // =====================================
 
-      } catch (error) {
+    if (loading) {
 
-        console.error(
-          "Error loading jobs:",
-          error
-        );
+        return (
+            <div className="jobs-page">
 
-        setError(
-          "Unable to load jobs."
-        );
+                <div className="jobs-hero">
 
-      } finally {
+                    <h1>
+                        Find Your Next Opportunity
+                    </h1>
 
-        setLoading(false);
-
-      }
-
-    };
-
-
-    loadData();
-
-  }, [navigate]);
-
-
-  // =====================================
-  // Search Filtering
-  // =====================================
-
-  const filteredJobs = jobs.filter(job => {
-
-    const matchesSearch =
-      job.title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-
-      job.company
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-
-    const matchesLocation =
-      job.location
-        .toLowerCase()
-        .includes(location.toLowerCase());
-
-
-    return matchesSearch && matchesLocation;
-
-  });
-
-
-  // =====================================
-  // Loading
-  // =====================================
-
-  if (loading) {
-
-    return (
-      <h2>
-        Loading jobs...
-      </h2>
-    );
-
-  }
-
-
-  // =====================================
-  // Error
-  // =====================================
-
-  if (error) {
-
-    return (
-      <h2>
-        {error}
-      </h2>
-    );
-
-  }
-
-
-  // =====================================
-  // Page
-  // =====================================
-
-  return (
-
-    <div className="jobs-page">
-
-
-      {/* ============================= */}
-      {/* Hero Section */}
-      {/* ============================= */}
-
-      <section className="jobs-hero">
-
-        <h1>
-          Find Your Next Opportunity
-        </h1>
-
-        <p>
-          Discover jobs that match your
-          skills and career goals.
-        </p>
-
-      </section>
-
-
-      {/* ============================= */}
-      {/* Search Section */}
-      {/* ============================= */}
-
-      <div className="search-container">
-
-        <input
-          type="text"
-          placeholder="Search by job title or company"
-          className="search-box"
-          value={searchTerm}
-          onChange={(e) =>
-            setSearchTerm(e.target.value)
-          }
-        />
-
-        <input
-          type="text"
-          placeholder="Location"
-          className="search-box"
-          value={location}
-          onChange={(e) =>
-            setLocation(e.target.value)
-          }
-        />
-
-        <button className="search-button">
-          Search
-        </button>
-
-      </div>
-
-
-      {/* ============================= */}
-      {/* Recommended Jobs */}
-      {/* ============================= */}
-
-      {recommendedJobs.length > 0 && (
-
-        <>
-
-          <h2 className="jobs-section-title">
-            ⭐ Recommended Jobs
-          </h2>
-
-
-          <div className="jobs-grid">
-
-            {recommendedJobs.map(job => (
-
-              <div
-                className="job-card recommended-card"
-                key={`recommended-${job.id}`}
-              >
-
-                {/* Company + Job Title */}
-
-                <div className="job-card-header">
-
-                  <div className="company-logo">
-
-                    {job.company
-                      .charAt(0)
-                      .toUpperCase()}
-
-                  </div>
-
-
-                  <div>
-
-                    <h3 className="job-title">
-                      {job.title}
-                    </h3>
-
-                    <p className="job-company">
-                      {job.company}
+                    <p>
+                        Analyzing jobs based on your
+                        skills and career direction...
                     </p>
 
-                  </div>
-
                 </div>
 
+                <h2 className="jobs-section-title">
+                    🤖 AI is analyzing available jobs...
+                </h2>
 
-                {/* Job Details */}
+            </div>
+        );
 
-                <div className="job-details">
-
-                  <p className="job-info">
-                    📍 {job.location}
-                  </p>
-
-                  <p className="job-salary">
-                    ₹
-                    {job.salary.toLocaleString(
-                      "en-IN"
-                    )}
-                  </p>
-
-                </div>
+    }
 
 
-                {/* Tags */}
+    // =====================================
+    // Error
+    // =====================================
 
-                <div className="job-tags">
+    if (error) {
 
-                  <span className="job-tag">
-                    Recommended
-                  </span>
+        return (
+            <div className="jobs-page">
 
-                  <span className="job-tag">
-                    Full Time
-                  </span>
-
-                </div>
-
-
-                {/* View Details */}
+                <h2>
+                    {error}
+                </h2>
 
                 <button
-                  className="view-button"
-                  onClick={() =>
-                    navigate(
-                      `/jobs/${job.id}`
-                    )
-                  }
+                    className="view-button"
+                    onClick={() =>
+                        window.location.reload()
+                    }
                 >
-                  View Details
+                    Try Again
                 </button>
 
-              </div>
+            </div>
+        );
 
-            ))}
-
-          </div>
-
-        </>
-
-      )}
+    }
 
 
-      {/* ============================= */}
-      {/* Available Jobs */}
-      {/* ============================= */}
+    // =====================================
+    // Page
+    // =====================================
 
-      <h2 className="jobs-section-title">
-        Available Jobs
-      </h2>
+    return (
 
-
-      {filteredJobs.length === 0 ? (
-
-        <p className="no-jobs">
-          No jobs found.
-        </p>
-
-      ) : (
-
-        <div className="jobs-grid">
-
-          {filteredJobs.map(job => (
-
-            <div
-              className="job-card"
-              key={job.id}
-            >
-
-              {/* Company + Job Title */}
-
-              <div className="job-card-header">
-
-                <div className="company-logo">
-
-                  {job.company
-                    .charAt(0)
-                    .toUpperCase()}
-
-                </div>
+        <div className="jobs-page">
 
 
-                <div>
+            {/* ============================= */}
+            {/* Hero Section */}
+            {/* ============================= */}
 
-                  <h3 className="job-title">
-                    {job.title}
-                  </h3>
+            <section className="jobs-hero">
 
-                  <p className="job-company">
-                    {job.company}
-                  </p>
+                <h1>
+                    Find Your Next Opportunity
+                </h1>
 
-                </div>
-
-              </div>
-
-
-              {/* Job Details */}
-
-              <div className="job-details">
-
-                <p className="job-info">
-                  📍 {job.location}
+                <p>
+                    Discover jobs that match your
+                    skills and career goals.
                 </p>
 
-                <p className="job-salary">
-                  ₹
-                  {job.salary.toLocaleString(
-                    "en-IN"
-                  )}
-                </p>
-
-              </div>
+            </section>
 
 
-              {/* Tags */}
+            {/* ============================= */}
+            {/* Search Section */}
+            {/* ============================= */}
 
-              <div className="job-tags">
+            <div className="search-container">
 
-                <span className="job-tag">
-                  Full Time
-                </span>
+                <input
+                    type="text"
+                    placeholder="Search by job title or company"
+                    className="search-box"
+                    value={searchTerm}
+                    onChange={(e) =>
+                        setSearchTerm(e.target.value)
+                    }
+                />
 
-                <span className="job-tag">
-                  {job.location}
-                </span>
 
-              </div>
+                <input
+                    type="text"
+                    placeholder="Location"
+                    className="search-box"
+                    value={location}
+                    onChange={(e) =>
+                        setLocation(e.target.value)
+                    }
+                />
 
 
-              {/* View Details */}
-
-              <button
-                className="view-button"
-                onClick={() =>
-                  navigate(
-                    `/jobs/${job.id}`
-                  )
-                }
-              >
-                View Details
-              </button>
+                <button className="search-button">
+                    Search
+                </button>
 
             </div>
 
-          ))}
+
+            {/* ============================= */}
+            {/* AI Recommended Jobs */}
+            {/* ============================= */}
+
+            {recommendedJobs.length > 0 && (
+
+                <>
+
+                    <div className="ai-jobs-heading">
+
+                        <h2 className="jobs-section-title">
+                            🤖 AI Recommended Jobs
+                        </h2>
+
+                        <p>
+                            Personalized recommendations
+                            based on your profile, skills,
+                            and career direction.
+                        </p>
+
+                    </div>
+
+
+                    <div className="jobs-grid">
+
+                        {recommendedJobs
+                            .slice(0, 5)
+                            .map(recommendation => {
+
+                                const job =
+                                    recommendation.job;
+
+                                return (
+
+                                    <div
+                                        className="job-card recommended-card"
+                                        key={
+                                            `ai-${job.id}`
+                                        }
+                                    >
+
+                                        {/* AI Match */}
+
+                                        <div className="ai-match-badge">
+
+                                            ⭐{" "}
+                                            {
+                                                recommendation.matchPercentage
+                                            }%
+                                            AI Match
+
+                                        </div>
+
+
+                                        {/* Company + Job Title */}
+
+                                        <div className="job-card-header">
+
+                                            <div className="company-logo">
+
+                                                {job.company
+                                                    ?.charAt(0)
+                                                    .toUpperCase()}
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <h3 className="job-title">
+                                                    {job.title}
+                                                </h3>
+
+                                                <p className="job-company">
+                                                    {job.company}
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {/* Job Details */}
+
+                                        <div className="job-details">
+
+                                            <p className="job-info">
+                                                📍 {job.location}
+                                            </p>
+
+                                            <p className="job-salary">
+                                                ₹
+                                                {job.salary
+                                                    ?.toLocaleString(
+                                                        "en-IN"
+                                                    )}
+                                            </p>
+
+                                        </div>
+
+
+                                        {/* AI Role */}
+
+                                        {recommendation.matchedRole && (
+
+                                            <div className="ai-role">
+
+                                                <strong>
+                                                    🎯 Career Direction
+                                                </strong>
+
+                                                <p>
+                                                    {
+                                                        recommendation.matchedRole
+                                                    }
+                                                </p>
+
+                                            </div>
+
+                                        )}
+
+
+                                        {/* Matched Skills */}
+
+                                        {recommendation
+                                            .matchedSkills
+                                            ?.length > 0 && (
+
+                                            <div className="ai-skills">
+
+                                                <strong>
+                                                    ✓ Matched Skills
+                                                </strong>
+
+                                                <div className="ai-skill-list">
+
+                                                    {recommendation
+                                                        .matchedSkills
+                                                        .map(
+                                                            skill => (
+
+                                                                <span
+                                                                    className="ai-skill matched"
+                                                                    key={skill}
+                                                                >
+                                                                    ✓ {skill}
+                                                                </span>
+
+                                                            )
+                                                        )}
+
+                                                </div>
+
+                                            </div>
+
+                                        )}
+
+
+                                        {/* Missing Skills */}
+
+                                        {recommendation
+                                            .missingSkills
+                                            ?.length > 0 && (
+
+                                            <div className="ai-skills">
+
+                                                <strong>
+                                                    ⚠ Skills to Improve
+                                                </strong>
+
+                                                <div className="ai-skill-list">
+
+                                                    {recommendation
+                                                        .missingSkills
+                                                        .map(
+                                                            skill => (
+
+                                                                <span
+                                                                    className="ai-skill missing"
+                                                                    key={skill}
+                                                                >
+                                                                    {skill}
+                                                                </span>
+
+                                                            )
+                                                        )}
+
+                                                </div>
+
+                                            </div>
+
+                                        )}
+
+
+                                        {/* AI Explanation */}
+
+                                        {recommendation.explanation && (
+
+                                            <div className="ai-explanation">
+
+                                                <strong>
+                                                    💡 Why recommended?
+                                                </strong>
+
+                                                <p>
+                                                    {
+                                                        recommendation.explanation
+                                                    }
+                                                </p>
+
+                                            </div>
+
+                                        )}
+
+
+                                        {/* Tags */}
+
+                                        <div className="job-tags">
+
+                                            <span className="job-tag">
+                                                AI Recommended
+                                            </span>
+
+                                            <span className="job-tag">
+                                                Full Time
+                                            </span>
+
+                                        </div>
+
+
+                                        {/* View Details */}
+
+                                        <button
+                                            className="view-button"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/jobs/${job.id}`
+                                                )
+                                            }
+                                        >
+                                            View Details
+                                        </button>
+
+                                    </div>
+
+                                );
+
+                            })}
+
+                    </div>
+
+                </>
+
+            )}
+
+
+            {/* ============================= */}
+            {/* Available Jobs */}
+            {/* ============================= */}
+
+            <h2 className="jobs-section-title">
+                Available Jobs
+            </h2>
+
+
+            {filteredJobs.length === 0 ? (
+
+                <p className="no-jobs">
+                    No jobs found.
+                </p>
+
+            ) : (
+
+                <div className="jobs-grid">
+
+                    {filteredJobs.map(job => (
+
+                        <div
+                            className="job-card"
+                            key={job.id}
+                        >
+
+                            {/* Company + Job Title */}
+
+                            <div className="job-card-header">
+
+                                <div className="company-logo">
+
+                                    {job.company
+                                        ?.charAt(0)
+                                        .toUpperCase()}
+
+                                </div>
+
+
+                                <div>
+
+                                    <h3 className="job-title">
+                                        {job.title}
+                                    </h3>
+
+                                    <p className="job-company">
+                                        {job.company}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* Job Details */}
+
+                            <div className="job-details">
+
+                                <p className="job-info">
+                                    📍 {job.location}
+                                </p>
+
+                                <p className="job-salary">
+                                    ₹
+                                    {job.salary
+                                        ?.toLocaleString(
+                                            "en-IN"
+                                        )}
+                                </p>
+
+                            </div>
+
+
+                            {/* Tags */}
+
+                            <div className="job-tags">
+
+                                <span className="job-tag">
+                                    Full Time
+                                </span>
+
+                                <span className="job-tag">
+                                    {job.location}
+                                </span>
+
+                            </div>
+
+
+                            {/* View Details */}
+
+                            <button
+                                className="view-button"
+                                onClick={() =>
+                                    navigate(
+                                        `/jobs/${job.id}`
+                                    )
+                                }
+                            >
+                                View Details
+                            </button>
+
+                        </div>
+
+                    ))}
+
+                </div>
+
+            )}
 
         </div>
 
-      )}
-
-    </div>
-
-  );
+    );
 
 }
 

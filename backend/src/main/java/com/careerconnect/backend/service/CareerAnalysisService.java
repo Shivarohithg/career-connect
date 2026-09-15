@@ -2,7 +2,11 @@ package com.careerconnect.backend.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,160 +35,560 @@ public class CareerAnalysisService {
     @Autowired
     private JobRoleRepository jobRoleRepository;
 
+
     public CareerAnalysis getAnalysis(int studentId) {
 
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Student not found"));
+        Student student =
+                studentRepository.findById(studentId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Student not found"));
 
         return careerAnalysisRepository.findByStudent(student)
                 .orElseThrow(() ->
-                        new RuntimeException("Career analysis not found"));
+                        new RuntimeException(
+                                "Career analysis not found"));
     }
+
 
     public CareerAnalysis createAnalysis(int studentId) {
 
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() ->
-                        new RuntimeException("Student not found"));
+        Student student =
+                studentRepository.findById(studentId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Student not found"));
 
         StudentProfile profile =
                 studentProfileRepository.findByStudent(student)
                         .orElseThrow(() ->
-                                new RuntimeException("Profile not found"));
+                                new RuntimeException(
+                                        "Profile not found"));
 
-        if (careerAnalysisRepository.findByStudent(student).isPresent()) {
-            throw new RuntimeException(
-                    "Career analysis already exists for this student");
-        }
-
-        String studentSkills = profile.getSkills();
-
-        List<JobRole> jobRoles = jobRoleRepository.findAll();
-
-        List<String> recommendedRoles = new ArrayList<>();
-        List<String> recommendedSkills = new ArrayList<>();
-        List<String> skillGaps = new ArrayList<>();
+        CareerAnalysis analysis =
+                careerAnalysisRepository
+                        .findByStudent(student)
+                        .orElse(new CareerAnalysis());
 
         /*
-         * Compare student's skills with every job role.
+         * Convert student's skills into normalized
+         * lowercase values for accurate comparison.
          */
+        Set<String> studentSkills =
+                normalizeSkills(profile.getSkills());
 
+
+        List<JobRole> jobRoles =
+                jobRoleRepository.findAll();
+
+
+        List<RoleMatch> roleMatches =
+                new ArrayList<>();
+
+
+        /*
+         * Compare student skills with every career role.
+         */
         for (JobRole jobRole : jobRoles) {
 
-            String[] requiredSkills =
-                    jobRole.getRequiredSkills().split(",");
+            List<String> requiredSkills =
+                    parseRequiredSkills(
+                            jobRole.getRequiredSkills());
 
-            int matchedSkills = 0;
+            int totalWeight = 0;
+            int matchedWeight = 0;
 
-            for (String requiredSkill : requiredSkills) {
+            List<String> matchedSkills =
+                    new ArrayList<>();
 
-                String skill = requiredSkill.trim();
+            List<String> missingSkills =
+                    new ArrayList<>();
 
-                if (studentSkills != null &&
-                        studentSkills.toLowerCase()
-                                .contains(skill.toLowerCase())) {
 
-                    matchedSkills++;
+            for (String skill : requiredSkills) {
+
+                int weight =
+                        getSkillWeight(
+                                jobRole.getRoleName(),
+                                skill);
+
+                totalWeight += weight;
+
+
+                if (studentHasSkill(
+                        studentSkills,
+                        skill)) {
+
+                    matchedWeight += weight;
+
+                    matchedSkills.add(skill);
 
                 } else {
 
-                    if (!skillGaps.contains(skill)) {
-                        skillGaps.add(skill);
-                    }
+                    missingSkills.add(skill);
                 }
             }
 
-            /*
-             * Calculate match percentage.
-             */
 
-            int matchPercentage =
-                    (matchedSkills * 100) / requiredSkills.length;
+            int matchPercentage = 0;
 
-            /*
-             * Recommend roles with at least one
-             * matching skill.
-             */
+            if (totalWeight > 0) {
 
-            if (matchedSkills > 0) {
-
-                recommendedRoles.add(
-                        jobRole.getRoleName()
-                                + " (" + matchPercentage + "% Match)"
-                );
+                matchPercentage =
+                        Math.round(
+                                (matchedWeight * 100f)
+                                        / totalWeight);
             }
 
-            /*
-             * Store all required skills.
-             */
 
-            for (String requiredSkill : requiredSkills) {
-
-                String skill = requiredSkill.trim();
-
-                if (!recommendedSkills.contains(skill)) {
-                    recommendedSkills.add(skill);
-                }
-            }
+            roleMatches.add(
+                    new RoleMatch(
+                            jobRole.getRoleName(),
+                            matchPercentage,
+                            matchedSkills,
+                            missingSkills
+                    )
+            );
         }
 
+
         /*
-         * Sort roles by highest match percentage.
+         * Highest matching role comes first.
          */
+        roleMatches.sort(
+                Comparator.comparingInt(
+                        RoleMatch::getMatchPercentage
+                ).reversed()
+        );
 
-recommendedRoles.sort(
-        Comparator.comparingInt(
-                (String role) -> extractPercentage(role)
-        ).reversed()
-);
 
-        String recommendedRolesString =
-                String.join(", ", recommendedRoles);
+        /*
+         * Recommended roles.
+         */
+        List<String> recommendedRoles =
+                new ArrayList<>();
 
-        String recommendedSkillsString =
-                String.join(", ", recommendedSkills);
+        int roleLimit =
+                Math.min(roleMatches.size(), 5);
 
-        String skillGapsString =
-                String.join(", ", skillGaps);
 
-        CareerAnalysis analysis = new CareerAnalysis();
+        for (int i = 0; i < roleLimit; i++) {
+
+            RoleMatch match =
+                    roleMatches.get(i);
+
+            recommendedRoles.add(
+                    match.getRoleName()
+                            + " ("
+                            + match.getMatchPercentage()
+                            + "% Match)"
+            );
+        }
+
+
+        /*
+         * Best career role.
+         */
+        RoleMatch bestRole =
+                roleMatches.isEmpty()
+                        ? null
+                        : roleMatches.get(0);
+
+
+        /*
+         * Skill gaps are now based mainly on
+         * the BEST career direction instead
+         * of combining every role.
+         */
+        List<String> skillGaps =
+                new ArrayList<>();
+
+        if (bestRole != null) {
+
+            skillGaps.addAll(
+                    bestRole.getMissingSkills()
+            );
+        }
+
+
+        /*
+         * Recommended skills are based on
+         * the top career directions.
+         */
+        Set<String> recommendedSkillSet =
+                new HashSet<>();
+
+        int topRoleLimit =
+                Math.min(roleMatches.size(), 3);
+
+
+        for (int i = 0; i < topRoleLimit; i++) {
+
+            recommendedSkillSet.addAll(
+                    roleMatches
+                            .get(i)
+                            .getMatchedSkills()
+            );
+
+            recommendedSkillSet.addAll(
+                    roleMatches
+                            .get(i)
+                            .getMissingSkills()
+            );
+        }
+
+
+        List<String> recommendedSkills =
+                new ArrayList<>(
+                        recommendedSkillSet
+                );
+
 
         analysis.setStudent(student);
 
         analysis.setRecommendedRoles(
-                recommendedRolesString);
+                String.join(
+                        ", ",
+                        recommendedRoles
+                )
+        );
 
         analysis.setRecommendedSkills(
-                recommendedSkillsString);
+                String.join(
+                        ", ",
+                        recommendedSkills
+                )
+        );
 
         analysis.setSkillGaps(
-                skillGapsString);
+                String.join(
+                        ", ",
+                        skillGaps
+                )
+        );
 
-        return careerAnalysisRepository.save(analysis);
+
+        return careerAnalysisRepository.save(
+                analysis
+        );
     }
 
+
     /*
-     * Extract percentage from:
-     *
-     * "Java Backend Developer (67% Match)"
+     * Normalize student skills.
      */
+    private Set<String> normalizeSkills(
+            String skills) {
 
-    private int extractPercentage(String role) {
+        Set<String> normalized =
+                new HashSet<>();
 
-        try {
+        if (skills == null ||
+                skills.trim().isEmpty()) {
 
-            int start = role.lastIndexOf("(") + 1;
+            return normalized;
+        }
 
-            int end = role.indexOf("%", start);
+        String[] values =
+                skills.split(",");
 
-            return Integer.parseInt(
-                    role.substring(start, end)
-            );
+        for (String value : values) {
 
-        } catch (Exception e) {
+            String skill =
+                    normalizeSkill(value);
 
-            return 0;
+            if (!skill.isEmpty()) {
+                normalized.add(skill);
+            }
+        }
+
+        return normalized;
+    }
+
+
+    /*
+     * Parse role required skills.
+     */
+    private List<String> parseRequiredSkills(
+            String requiredSkills) {
+
+        List<String> result =
+                new ArrayList<>();
+
+        if (requiredSkills == null ||
+                requiredSkills.trim().isEmpty()) {
+
+            return result;
+        }
+
+        String[] values =
+                requiredSkills.split(",");
+
+        for (String value : values) {
+
+            String skill =
+                    value.trim();
+
+            if (!skill.isEmpty()) {
+                result.add(skill);
+            }
+        }
+
+        return result;
+    }
+
+
+    /*
+     * Accurate skill comparison.
+     */
+    private boolean studentHasSkill(
+            Set<String> studentSkills,
+            String requiredSkill) {
+
+        String normalizedRequired =
+                normalizeSkill(requiredSkill);
+
+
+        if (studentSkills.contains(
+                normalizedRequired)) {
+
+            return true;
+        }
+
+
+        /*
+         * Handle common skill variations.
+         */
+        Map<String, String> aliases =
+                new HashMap<>();
+
+        aliases.put(
+                "spring",
+                "spring boot"
+        );
+
+        aliases.put(
+                "springboot",
+                "spring boot"
+        );
+
+        aliases.put(
+                "js",
+                "javascript"
+        );
+
+        aliases.put(
+                "reactjs",
+                "react"
+        );
+
+        aliases.put(
+                "rest",
+                "rest apis"
+        );
+
+
+        String canonical =
+                aliases.getOrDefault(
+                        normalizedRequired,
+                        normalizedRequired
+                );
+
+
+        for (String studentSkill :
+                studentSkills) {
+
+            String studentCanonical =
+                    aliases.getOrDefault(
+                            studentSkill,
+                            studentSkill
+                    );
+
+            if (studentCanonical.equals(
+                    canonical)) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    private String normalizeSkill(
+            String skill) {
+
+        return skill
+                .trim()
+                .toLowerCase()
+                .replaceAll(
+                        "\\s+",
+                        " "
+                );
+    }
+
+
+    /*
+     * Important skills receive higher weight.
+     */
+    private int getSkillWeight(
+            String roleName,
+            String skill) {
+
+        String role =
+                roleName.toLowerCase();
+
+        String normalized =
+                normalizeSkill(skill);
+
+
+        /*
+         * Core backend skills.
+         */
+        if (role.contains("java backend")) {
+
+            if (normalized.equals("java") ||
+                    normalized.equals("spring boot") ||
+                    normalized.equals("sql")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        /*
+         * Full stack skills.
+         */
+        if (role.contains("full stack")) {
+
+            if (normalized.equals("javascript") ||
+                    normalized.equals("react") ||
+                    normalized.equals("node.js")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        /*
+         * Frontend skills.
+         */
+        if (role.contains("frontend")) {
+
+            if (normalized.equals("javascript") ||
+                    normalized.equals("react")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        /*
+         * Python developer.
+         */
+        if (role.contains("python")) {
+
+            if (normalized.equals("python") ||
+                    normalized.equals("sql")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        /*
+         * Software engineer.
+         */
+        if (role.contains("software engineer")) {
+
+            if (normalized.equals("java") ||
+                    normalized.equals("dsa") ||
+                    normalized.equals("oop")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        /*
+         * Data analyst.
+         */
+        if (role.contains("data analyst")) {
+
+            if (normalized.equals("python") ||
+                    normalized.equals("sql") ||
+                    normalized.equals("statistics")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        return 1;
+    }
+
+
+    /*
+     * Internal class used for role scoring.
+     */
+    private static class RoleMatch {
+
+        private String roleName;
+
+        private int matchPercentage;
+
+        private List<String> matchedSkills;
+
+        private List<String> missingSkills;
+
+
+        public RoleMatch(
+                String roleName,
+                int matchPercentage,
+                List<String> matchedSkills,
+                List<String> missingSkills) {
+
+            this.roleName = roleName;
+
+            this.matchPercentage =
+                    matchPercentage;
+
+            this.matchedSkills =
+                    matchedSkills;
+
+            this.missingSkills =
+                    missingSkills;
+        }
+
+
+        public String getRoleName() {
+            return roleName;
+        }
+
+
+        public int getMatchPercentage() {
+            return matchPercentage;
+        }
+
+
+        public List<String> getMatchedSkills() {
+            return matchedSkills;
+        }
+
+
+        public List<String> getMissingSkills() {
+            return missingSkills;
         }
     }
 }
