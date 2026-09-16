@@ -13,6 +13,9 @@ function JobDetails() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    const [aiRecommendation, setAiRecommendation] = useState(null);
+    const [aiLoading, setAiLoading] = useState(true);
+
     const [applying, setApplying] = useState(false);
     const [applicationMessage, setApplicationMessage] = useState("");
 
@@ -22,15 +25,23 @@ function JobDetails() {
 
             try {
 
+                setLoading(true);
+                setError("");
+
                 const data = await getJobById(id);
 
                 setJob(data);
 
             } catch (error) {
 
-                console.error("Error loading job:", error);
+                console.error(
+                    "Error loading job:",
+                    error
+                );
 
-                setError("Unable to load job details.");
+                setError(
+                    "Unable to load job details."
+                );
 
             } finally {
 
@@ -44,6 +55,80 @@ function JobDetails() {
     }, [id]);
 
 
+    useEffect(() => {
+
+        const loadAIRecommendation = async () => {
+
+            try {
+
+                setAiLoading(true);
+
+                const storedStudent =
+                    localStorage.getItem("student");
+
+                if (!storedStudent) {
+                    setAiRecommendation(null);
+                    return;
+                }
+
+                const student =
+                    JSON.parse(storedStudent);
+
+                const studentId =
+                    student.id;
+
+                if (!studentId) {
+                    setAiRecommendation(null);
+                    return;
+                }
+
+                const response =
+                    await fetch(
+                        `http://localhost:8080/ai/job-recommendations/${studentId}`
+                    );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Unable to load AI recommendation."
+                    );
+                }
+
+                const recommendations =
+                    await response.json();
+
+                const currentRecommendation =
+                    recommendations.find(
+                        (recommendation) =>
+                            String(
+                                recommendation.job?.id
+                            ) === String(id)
+                    );
+
+                setAiRecommendation(
+                    currentRecommendation || null
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Error loading AI recommendation:",
+                    error
+                );
+
+                setAiRecommendation(null);
+
+            } finally {
+
+                setAiLoading(false);
+
+            }
+        };
+
+        loadAIRecommendation();
+
+    }, [id]);
+
+
     const handleApply = async () => {
 
         try {
@@ -51,8 +136,8 @@ function JobDetails() {
             setApplying(true);
             setApplicationMessage("");
 
-            // Get logged-in student
-            const storedStudent = localStorage.getItem("student");
+            const storedStudent =
+                localStorage.getItem("student");
 
             if (!storedStudent) {
 
@@ -65,12 +150,21 @@ function JobDetails() {
                 return;
             }
 
-            const student = JSON.parse(storedStudent);
+            const student =
+                JSON.parse(storedStudent);
 
-            const studentId = student.id;
+            const studentId =
+                student.id;
 
-            console.log("Applying with student ID:", studentId);
-            console.log("Job ID:", id);
+            console.log(
+                "Applying with student ID:",
+                studentId
+            );
+
+            console.log(
+                "Job ID:",
+                id
+            );
 
             if (!studentId) {
 
@@ -81,7 +175,10 @@ function JobDetails() {
                 return;
             }
 
-            await applyForJob(studentId, id);
+            await applyForJob(
+                studentId,
+                id
+            );
 
             setApplicationMessage(
                 "Application submitted successfully!"
@@ -89,15 +186,22 @@ function JobDetails() {
 
         } catch (error) {
 
-            console.error("Error applying for job:", error);
+            console.error(
+                "Error applying for job:",
+                error
+            );
 
-            if (error.response?.status === 409) {
+            if (
+                error.response?.status === 409
+            ) {
 
                 setApplicationMessage(
                     "You have already applied for this job."
                 );
 
-            } else if (error.response?.data) {
+            } else if (
+                error.response?.data
+            ) {
 
                 setApplicationMessage(
                     error.response.data
@@ -120,15 +224,34 @@ function JobDetails() {
 
 
     if (loading) {
-        return <h2>Loading job details...</h2>;
+
+        return (
+            <div className="job-details-page">
+                <h2>
+                    Loading job details...
+                </h2>
+            </div>
+        );
     }
+
 
     if (error) {
-        return <h2>{error}</h2>;
+
+        return (
+            <div className="job-details-page">
+                <h2>{error}</h2>
+            </div>
+        );
     }
 
+
     if (!job) {
-        return <h2>Job not found.</h2>;
+
+        return (
+            <div className="job-details-page">
+                <h2>Job not found.</h2>
+            </div>
+        );
     }
 
 
@@ -148,12 +271,16 @@ function JobDetails() {
                 <div className="job-details-header">
 
                     <div className="details-company-logo">
-                        {job.company.charAt(0).toUpperCase()}
+                        {job.company
+                            ?.charAt(0)
+                            .toUpperCase()}
                     </div>
 
                     <div>
 
-                        <h1>{job.title}</h1>
+                        <h1>
+                            {job.title}
+                        </h1>
 
                         <p className="details-company">
                             {job.company}
@@ -171,8 +298,13 @@ function JobDetails() {
                         <span>📍</span>
 
                         <div>
-                            <strong>Location</strong>
-                            <p>{job.location}</p>
+                            <strong>
+                                Location
+                            </strong>
+
+                            <p>
+                                {job.location}
+                            </p>
                         </div>
 
                     </div>
@@ -183,10 +315,17 @@ function JobDetails() {
                         <span>💰</span>
 
                         <div>
-                            <strong>Salary</strong>
+
+                            <strong>
+                                Salary
+                            </strong>
 
                             <p>
-                                ₹{job.salary.toLocaleString("en-IN")}
+                                ₹
+                                {job.salary
+                                    ?.toLocaleString(
+                                        "en-IN"
+                                    )}
                             </p>
 
                         </div>
@@ -199,8 +338,15 @@ function JobDetails() {
                         <span>💼</span>
 
                         <div>
-                            <strong>Employment</strong>
-                            <p>Full Time</p>
+
+                            <strong>
+                                Employment
+                            </strong>
+
+                            <p>
+                                Full Time
+                            </p>
+
                         </div>
 
                     </div>
@@ -211,18 +357,183 @@ function JobDetails() {
                 <hr />
 
 
+                {!aiLoading &&
+                    aiRecommendation && (
+
+                    <section className="job-ai-section">
+
+                        <div className="job-ai-header">
+
+                            <div>
+                                <span className="job-ai-label">
+                                    🤖 AI CAREER INTELLIGENCE
+                                </span>
+
+                                <h2>
+                                    Your AI Match
+                                </h2>
+                            </div>
+
+                            <div className="job-ai-percentage">
+                                ⭐{" "}
+                                {
+                                    aiRecommendation
+                                        .matchPercentage
+                                }%
+                            </div>
+
+                        </div>
+
+
+                        <div className="job-ai-role">
+
+                            <span>
+                                🎯 Career Direction
+                            </span>
+
+                            <strong>
+                                {
+                                    aiRecommendation
+                                        .matchedRole
+                                }
+                            </strong>
+
+                        </div>
+
+
+                        {aiRecommendation
+                            .matchedSkills
+                            ?.length > 0 && (
+
+                            <div className="job-ai-skills">
+
+                                <h3>
+                                    ✓ Matched Skills
+                                </h3>
+
+                                <div className="job-ai-skill-list">
+
+                                    {aiRecommendation
+                                        .matchedSkills
+                                        .map(
+                                            (
+                                                skill,
+                                                index
+                                            ) => (
+
+                                                <span
+                                                    className="job-ai-skill matched"
+                                                    key={index}
+                                                >
+                                                    ✓ {skill}
+                                                </span>
+
+                                            )
+                                        )}
+
+                                </div>
+
+                            </div>
+                        )}
+
+
+                        {aiRecommendation
+                            .missingSkills
+                            ?.length > 0 && (
+
+                            <div className="job-ai-skills">
+
+                                <h3>
+                                    ⚠ Skills to Improve
+                                </h3>
+
+                                <div className="job-ai-skill-list">
+
+                                    {aiRecommendation
+                                        .missingSkills
+                                        .map(
+                                            (
+                                                skill,
+                                                index
+                                            ) => (
+
+                                                <span
+                                                    className="job-ai-skill missing"
+                                                    key={index}
+                                                >
+                                                    {skill}
+                                                </span>
+
+                                            )
+                                        )}
+
+                                </div>
+
+                            </div>
+                        )}
+
+
+                        {aiRecommendation
+                            .explanation && (
+
+                            <div className="job-ai-explanation">
+
+                                <strong>
+                                    💡 Why this match?
+                                </strong>
+
+                                <p>
+                                    {
+                                        aiRecommendation
+                                            .explanation
+                                    }
+                                </p>
+
+                            </div>
+                        )}
+
+                    </section>
+                )}
+
+
+                {!aiLoading &&
+                    !aiRecommendation && (
+
+                    <section className="job-ai-no-match">
+
+                        <h2>
+                            🤖 AI Career Intelligence
+                        </h2>
+
+                        <p>
+                            This job does not currently
+                            match your profile strongly
+                            enough to appear as an AI
+                            recommendation.
+                        </p>
+
+                    </section>
+                )}
+
+
                 <section className="job-description">
 
-                    <h2>About This Job</h2>
+                    <h2>
+                        About This Job
+                    </h2>
 
                     <p>
-                        Join {job.company} as a {job.title}.
-                        This opportunity is based in {job.location}.
+                        Join {job.company} as a{" "}
+                        {job.title}.
+                        This opportunity is based
+                        in {job.location}.
                     </p>
 
                     <p>
-                        Explore this opportunity and take the next
-                        step in your career journey with CareerConnect.
+                        Explore this opportunity and
+                        take the next step in your
+                        career journey with
+                        CareerConnect.
                     </p>
 
                 </section>
@@ -233,14 +544,18 @@ function JobDetails() {
                     onClick={handleApply}
                     disabled={applying}
                 >
-                    {applying ? "Applying..." : "Apply Now"}
+                    {applying
+                        ? "Applying..."
+                        : "Apply Now"}
                 </button>
 
 
                 {applicationMessage && (
+
                     <p className="application-message">
                         {applicationMessage}
                     </p>
+
                 )}
 
             </div>

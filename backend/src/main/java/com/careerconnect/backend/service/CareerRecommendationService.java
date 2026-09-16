@@ -13,11 +13,19 @@ public class CareerRecommendationService {
             String recommendedRoles,
             String skillGaps) {
 
-        List<String> skills = parseList(studentSkills);
-        List<String> gaps = parseList(skillGaps);
+        List<String> skills =
+                parseList(studentSkills);
 
-        String bestRole = getBestRole(recommendedRoles);
-        int matchPercentage = getBestRolePercentage(recommendedRoles);
+        List<String> gaps =
+                parseList(skillGaps);
+
+        String bestRole =
+                getBestRole(recommendedRoles);
+
+        int matchPercentage =
+                getBestRolePercentage(
+                        recommendedRoles
+                );
 
         int readinessScore =
                 calculateReadinessScore(
@@ -25,52 +33,90 @@ public class CareerRecommendationService {
                         gaps.size()
                 );
 
-        StringBuilder advice = new StringBuilder();
+        StringBuilder advice =
+                new StringBuilder();
 
         advice.append("AI CAREER INSIGHTS\n\n");
 
+        advice.append(
+                "Career Readiness Score: "
+        )
+        .append(readinessScore)
+        .append("%\n\n");
 
-        // Career readiness
-        advice.append("Career Readiness Score: ")
-              .append(readinessScore)
-              .append("%\n\n");
 
+        /*
+         * BEST CAREER DIRECTION
+         */
 
-        // Best career direction
         if (!bestRole.isEmpty()) {
 
-            advice.append("Best Career Direction: ")
-                  .append(bestRole)
-                  .append("\n");
+            advice.append(
+                    "Best Career Direction: "
+            )
+            .append(bestRole)
+            .append("\n");
 
-            advice.append("Career Match: ")
-                  .append(matchPercentage)
-                  .append("%\n\n");
+            advice.append(
+                    "Career Match: "
+            )
+            .append(matchPercentage)
+            .append("%\n\n");
         }
 
 
-        // Why this role
+        /*
+         * WHY THIS ROLE
+         */
+
         if (!bestRole.isEmpty()) {
 
-            advice.append("Why this role?\n");
+            advice.append(
+                    "Why this role?\n"
+            );
 
-            if (skills.size() >= 3) {
+            if (matchPercentage >= 80) {
 
                 advice.append(
-                        "Your profile contains multiple technical "
-                        + "skills that align with the requirements "
-                        + "of the "
+                        "Your current skill profile has "
+                        + "strong alignment with the "
                         + bestRole
-                        + " role."
+                        + " role. You already have most "
+                        + "of the important skills needed "
+                        + "for this career direction."
+                );
+
+            } else if (matchPercentage >= 60) {
+
+                advice.append(
+                        "Your profile shows strong potential "
+                        + "for the "
+                        + bestRole
+                        + " role. Several of your existing "
+                        + "skills already match the role "
+                        + "requirements."
+                );
+
+            } else if (matchPercentage >= 40) {
+
+                advice.append(
+                        "Your current skills provide a "
+                        + "foundation for the "
+                        + bestRole
+                        + " career direction. Developing "
+                        + "the missing skills can improve "
+                        + "your alignment."
                 );
 
             } else {
 
                 advice.append(
-                        "Your current skills provide a foundation "
-                        + "for the "
+                        "Your current profile has some "
+                        + "connection with the "
                         + bestRole
-                        + " career direction."
+                        + " career direction, but additional "
+                        + "skills are needed to improve "
+                        + "your readiness."
                 );
             }
 
@@ -78,8 +124,13 @@ public class CareerRecommendationService {
         }
 
 
-        // Current strengths
-        advice.append("Current Strengths:\n");
+        /*
+         * CURRENT STRENGTHS
+         */
+
+        advice.append(
+                "Current Strengths:\n"
+        );
 
         if (skills.isEmpty()) {
 
@@ -92,21 +143,31 @@ public class CareerRecommendationService {
             for (String skill : skills) {
 
                 advice.append("✓ ")
-                      .append(skill)
-                      .append("\n");
+                        .append(skill)
+                        .append("\n");
             }
         }
 
 
-        // Skill gaps
+        /*
+         * PRIORITY SKILL GAPS
+         */
+
         if (!gaps.isEmpty()) {
 
-            advice.append("\nPriority Skill Gaps:\n");
+            advice.append(
+                    "\nPriority Skill Gaps:\n"
+            );
 
             int limit =
-                    Math.min(gaps.size(), 5);
+                    Math.min(
+                            gaps.size(),
+                            5
+                    );
 
-            for (int i = 0; i < limit; i++) {
+            for (int i = 0;
+                 i < limit;
+                 i++) {
 
                 String priority;
 
@@ -118,17 +179,22 @@ public class CareerRecommendationService {
                     priority = "LOW";
                 }
 
-                advice.append(i + 1)
-                      .append(". ")
-                      .append(gaps.get(i))
-                      .append(" [")
-                      .append(priority)
-                      .append("]\n");
+                advice.append(
+                        i + 1
+                )
+                .append(". ")
+                .append(gaps.get(i))
+                .append(" [")
+                .append(priority)
+                .append("]\n");
             }
         }
 
 
-        // Personalized roadmap
+        /*
+         * LEARNING ROADMAP
+         */
+
         advice.append(
                 "\nRecommended Learning Roadmap:\n"
         );
@@ -136,29 +202,38 @@ public class CareerRecommendationService {
         if (!gaps.isEmpty()) {
 
             int roadmapLimit =
-                    Math.min(gaps.size(), 4);
+                    Math.min(
+                            gaps.size(),
+                            4
+                    );
 
             for (int i = 0;
                  i < roadmapLimit;
                  i++) {
 
-                advice.append("Step ")
-                      .append(i + 1)
-                      .append(": Learn ")
-                      .append(gaps.get(i))
-                      .append("\n");
+                advice.append(
+                        "Step "
+                )
+                .append(i + 1)
+                .append(": Learn ")
+                .append(gaps.get(i))
+                .append("\n");
             }
 
         } else {
 
             advice.append(
-                    "Continue improving your existing skills "
-                    + "through projects and interview practice.\n"
+                    "Continue improving your existing "
+                    + "skills through projects, coding "
+                    + "practice, and technical interviews.\n"
             );
         }
 
 
-        // Personalized advice
+        /*
+         * PERSONALIZED AI RECOMMENDATION
+         */
+
         advice.append(
                 "\nAI Recommendation:\n"
         );
@@ -166,44 +241,108 @@ public class CareerRecommendationService {
         if (!bestRole.isEmpty() &&
                 !gaps.isEmpty()) {
 
+            String primaryGap =
+                    gaps.get(0);
+
             advice.append(
-                    "Your current profile is most aligned with "
+                    "Your current profile is most aligned "
+                    + "with "
                     + bestRole
-                    + ". Focus first on "
-                    + gaps.get(0)
-                    + " to improve your readiness for this role."
+                    + ". Your next priority should be "
+                    + primaryGap
+                    + ". Strengthening this skill can "
+                    + "improve your readiness for "
+                    + bestRole
+                    + " opportunities."
             );
 
         } else if (!bestRole.isEmpty()) {
 
             advice.append(
-                    "Your current skill profile is well aligned "
-                    + "with "
+                    "Your current skill profile is well "
+                    + "aligned with "
                     + bestRole
-                    + ". Continue building practical projects "
-                    + "and preparing for technical interviews."
+                    + ". Focus on practical projects, "
+                    + "problem solving, and technical "
+                    + "interview preparation."
             );
 
         } else {
 
             advice.append(
-                    "Add more technical skills to your profile "
-                    + "so CareerConnect AI can generate a more "
-                    + "personalized career recommendation."
+                    "Add more technical skills to your "
+                    + "profile so CareerConnect AI can "
+                    + "generate a more personalized "
+                    + "career recommendation."
             );
         }
 
 
-        // Project recommendation
-        if (!gaps.isEmpty()) {
+        /*
+         * NEXT ACTION
+         */
+
+        advice.append(
+                "\n\nSuggested Action:\n"
+        );
+
+        if (!gaps.isEmpty() &&
+                !bestRole.isEmpty()) {
 
             advice.append(
-                    "\n\nSuggested Action:\n"
-                    + "Build a practical project that uses your "
-                    + "existing skills together with "
+                    "Build a practical project that "
+                    + "combines your existing skills "
+                    + "with "
                     + gaps.get(0)
-                    + ". This will help convert the skill gap "
-                    + "into practical experience."
+                    + ". Then add the project to your "
+                    + "profile to demonstrate practical "
+                    + "experience."
+            );
+
+        } else if (!bestRole.isEmpty()) {
+
+            advice.append(
+                    "Build another project related to "
+                    + bestRole
+                    + " and practice role-specific "
+                    + "technical interview questions."
+            );
+
+        } else {
+
+            advice.append(
+                    "Add your technical skills, projects, "
+                    + "and coding-platform experience "
+                    + "to your profile."
+            );
+        }
+
+
+        /*
+         * INTERVIEW PREPARATION
+         */
+
+        advice.append(
+                "\n\nInterview Preparation:\n"
+        );
+
+        if (!bestRole.isEmpty()) {
+
+            advice.append(
+                    "For "
+                    + bestRole
+                    + " roles, practice data structures, "
+                    + "problem solving, core programming "
+                    + "concepts, and questions related "
+                    + "to your primary technical skills."
+            );
+
+        } else {
+
+            advice.append(
+                    "Practice data structures, problem "
+                    + "solving, programming fundamentals, "
+                    + "and technical interview questions."
             );
         }
 
@@ -211,6 +350,10 @@ public class CareerRecommendationService {
         return advice.toString();
     }
 
+
+    /*
+     * READINESS SCORE
+     */
 
     private int calculateReadinessScore(
             int skillCount,
@@ -228,11 +371,19 @@ public class CareerRecommendationService {
         }
 
         int score =
-                (skillCount * 100) / total;
+                (skillCount * 100)
+                        / total;
 
-        return Math.min(score, 100);
+        return Math.min(
+                score,
+                100
+        );
     }
 
+
+    /*
+     * PARSE COMMA-SEPARATED VALUES
+     */
 
     private List<String> parseList(
             String value) {
@@ -255,6 +406,7 @@ public class CareerRecommendationService {
                     item.trim();
 
             if (!cleaned.isEmpty()) {
+
                 result.add(cleaned);
             }
         }
@@ -262,6 +414,10 @@ public class CareerRecommendationService {
         return result;
     }
 
+
+    /*
+     * GET BEST ROLE
+     */
 
     private String getBestRole(
             String recommendedRoles) {
@@ -286,6 +442,10 @@ public class CareerRecommendationService {
     }
 
 
+    /*
+     * GET BEST ROLE MATCH %
+     */
+
     private int getBestRolePercentage(
             String recommendedRoles) {
 
@@ -303,10 +463,14 @@ public class CareerRecommendationService {
         try {
 
             int start =
-                    firstRole.lastIndexOf("(") + 1;
+                    firstRole.lastIndexOf("(")
+                            + 1;
 
             int end =
-                    firstRole.indexOf("%", start);
+                    firstRole.indexOf(
+                            "%",
+                            start
+                    );
 
             return Integer.parseInt(
                     firstRole.substring(

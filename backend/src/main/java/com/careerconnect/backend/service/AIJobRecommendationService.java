@@ -73,10 +73,6 @@ public class AIJobRecommendationService {
                             roles
                     );
 
-            /*
-             * If the job cannot be connected to a
-             * known career role, skip it.
-             */
             if (matchedRole == null) {
                 continue;
             }
@@ -94,12 +90,25 @@ public class AIJobRecommendationService {
                     new ArrayList<>();
 
 
+            int totalWeight = 0;
+            int matchedWeight = 0;
+
+
             /*
-             * Compare student's skills with
-             * the skills required by the role.
+             * Compare every required skill and
+             * apply role-specific weights.
              */
             for (String requiredSkill :
                     requiredSkills) {
+
+                int weight =
+                        getSkillWeight(
+                                matchedRole.getRoleName(),
+                                requiredSkill
+                        );
+
+                totalWeight += weight;
+
 
                 if (studentHasSkill(
                         studentSkills,
@@ -108,6 +117,8 @@ public class AIJobRecommendationService {
                     matchedSkills.add(
                             requiredSkill
                     );
+
+                    matchedWeight += weight;
 
                 } else {
 
@@ -119,25 +130,22 @@ public class AIJobRecommendationService {
 
 
             /*
-             * Calculate AI match percentage.
+             * Weighted AI match percentage.
              */
             int matchPercentage = 0;
 
-            if (!requiredSkills.isEmpty()) {
+            if (totalWeight > 0) {
 
                 matchPercentage =
                         Math.round(
-                                matchedSkills.size()
-                                        * 100f
-                                        / requiredSkills.size()
+                                matchedWeight * 100f
+                                        / totalWeight
                         );
             }
 
 
             /*
-             * IMPORTANT:
-             * A job with 0% match is NOT an
-             * AI recommendation.
+             * Do not show completely unrelated jobs.
              */
             if (matchPercentage <= 0) {
                 continue;
@@ -167,7 +175,7 @@ public class AIJobRecommendationService {
 
 
         /*
-         * Highest AI match appears first.
+         * Highest AI match first.
          */
         recommendations.sort(
                 Comparator.comparingInt(
@@ -181,8 +189,8 @@ public class AIJobRecommendationService {
 
 
     /*
-     * Find the career role that best matches
-     * the job title.
+     * Match a job title to the closest
+     * career role.
      */
     private JobRole findMatchingRole(
             Job job,
@@ -217,9 +225,6 @@ public class AIJobRecommendationService {
 
             for (String word : words) {
 
-                /*
-                 * Ignore generic words.
-                 */
                 if (word.length() < 3 ||
                         word.equals("developer") ||
                         word.equals("engineer")) {
@@ -247,7 +252,110 @@ public class AIJobRecommendationService {
 
 
     /*
-     * Generate a personalized explanation.
+     * Role-specific skill weights.
+     *
+     * Core skills receive higher weight.
+     */
+    private int getSkillWeight(
+            String roleName,
+            String skill) {
+
+        String role =
+                roleName.toLowerCase();
+
+        String normalizedSkill =
+                normalizeSkill(skill);
+
+
+        // Java Backend Developer
+        if (role.contains("java backend")) {
+
+            if (normalizedSkill.equals("java") ||
+                    normalizedSkill.equals("spring boot") ||
+                    normalizedSkill.equals("sql")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        // Full Stack Developer
+        if (role.contains("full stack")) {
+
+            if (normalizedSkill.equals("javascript") ||
+                    normalizedSkill.equals("react") ||
+                    normalizedSkill.equals("node.js")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        // Frontend Developer
+        if (role.contains("frontend")) {
+
+            if (normalizedSkill.equals("javascript") ||
+                    normalizedSkill.equals("react")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        // Python Developer
+        if (role.contains("python")) {
+
+            if (normalizedSkill.equals("python") ||
+                    normalizedSkill.equals("sql")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        // Software Engineer
+        if (role.contains("software engineer")) {
+
+            if (normalizedSkill.equals("java") ||
+                    normalizedSkill.equals("dsa") ||
+                    normalizedSkill.equals("oop")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        // Data Analyst
+        if (role.contains("data analyst")) {
+
+            if (normalizedSkill.equals("python") ||
+                    normalizedSkill.equals("sql") ||
+                    normalizedSkill.equals("statistics")) {
+
+                return 3;
+            }
+
+            return 1;
+        }
+
+
+        return 1;
+    }
+
+
+    /*
+     * Generate an explanation based on
+     * the calculated AI score.
      */
     private String generateExplanation(
             int matchPercentage,
@@ -294,9 +402,6 @@ public class AIJobRecommendationService {
         }
 
 
-        /*
-         * Explain matching skills.
-         */
         if (!matchedSkills.isEmpty()) {
 
             explanation.append(
@@ -312,9 +417,6 @@ public class AIJobRecommendationService {
         }
 
 
-        /*
-         * Explain the most important missing skill.
-         */
         if (!missingSkills.isEmpty()) {
 
             explanation.append(
@@ -336,8 +438,7 @@ public class AIJobRecommendationService {
 
 
     /*
-     * Convert profile skills into normalized
-     * lowercase values.
+     * Normalize profile skills.
      */
     private Set<String> normalizeSkills(
             String skills) {
@@ -372,7 +473,7 @@ public class AIJobRecommendationService {
 
 
     /*
-     * Parse required role skills.
+     * Parse role skills.
      */
     private List<String> parseSkills(
             String skills) {
@@ -407,8 +508,8 @@ public class AIJobRecommendationService {
 
 
     /*
-     * Check whether the student has the
-     * required skill.
+     * Check whether the student has
+     * a required skill.
      */
     private boolean studentHasSkill(
             Set<String> studentSkills,
@@ -425,9 +526,8 @@ public class AIJobRecommendationService {
         }
 
 
-        /*
-         * Common skill aliases.
-         */
+        // Skill aliases
+
         if (required.equals("spring") &&
                 studentSkills.contains(
                         "spring boot")) {
@@ -492,7 +592,7 @@ public class AIJobRecommendationService {
 
 
     /*
-     * Object returned to the frontend.
+     * Response object sent to React.
      */
     public static class JobRecommendation {
 
