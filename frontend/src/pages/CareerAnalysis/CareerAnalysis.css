@@ -1,188 +1,455 @@
 .career-analysis-page {
     min-height: calc(100vh - 70px);
-    padding: 40px 8%;
-    background: #f5f7fb;
+    padding: 50px 8%;
+    background: #f7f9fc;
 }
+
+
+/* ============================= */
+/* HEADER */
+/* ============================= */
 
 .career-analysis-header {
     text-align: center;
-    margin-bottom: 35px;
+    margin-bottom: 40px;
 }
 
 .career-analysis-header h1 {
-    margin-bottom: 10px;
-    font-size: 34px;
+    margin: 0 0 12px;
+    font-size: 38px;
+    color: #111827;
 }
 
 .career-analysis-header p {
-    color: #666;
-    font-size: 16px;
+    margin: 0;
+    color: #6b7280;
+    font-size: 17px;
 }
 
+
+/* ============================= */
+/* COMMON CARD */
+/* ============================= */
+
 .analysis-card {
+    max-width: 950px;
+    margin: 0 auto 25px;
+
     background: white;
-    padding: 25px;
-    margin-bottom: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+    padding: 28px;
+
+    border-radius: 16px;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.analysis-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.08);
 }
 
 .analysis-card h2 {
-    margin-bottom: 20px;
-    font-size: 22px;
-}
+    margin: 0 0 20px;
 
-.analysis-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+    font-size: 23px;
 
-.analysis-item {
-    padding: 14px 16px;
-    background: #f8f9fc;
-    border-radius: 8px;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.analysis-item:hover {
-    transform: translateX(4px);
-    transition: 0.2s ease;
-}
-
-.career-analysis-message {
-    min-height: 60vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    color: #111827;
 }
 
 
-.role-list {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-}
-
-.role-match {
-    padding: 18px;
-    border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-}
-
-.role-match-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.role-name {
-    font-size: 17px;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.match-percentage {
-    font-size: 15px;
-    font-weight: 700;
-    color: #2563eb;
-}
-
-/* Progress bar */
-
-.progress-bar {
-    width: 100%;
-    height: 10px;
-    background: #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    border-radius: 10px;
-    background: #2563eb;
-    transition: width 0.6s ease;
-}
-
-/* Skill gaps */
-
-.skill-gap {
-    color: #b45309;
-}
-
-/* AI Career Insights */
+/* ============================= */
+/* AI CAREER INSIGHTS */
+/* ============================= */
 
 .ai-career-card {
     border-left: 5px solid #4f46e5;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #faf9ff
+        );
+}
+
+.ai-career-card h2 {
+    color: #312e81;
 }
 
 .ai-advice {
     margin-top: 15px;
+
+    padding: 18px;
+
+    background: #f8f7ff;
+
+    border-radius: 12px;
+
     line-height: 1.7;
+
+    border: 1px solid #e0e7ff;
 }
 
 .ai-advice p {
     margin: 8px 0;
+
+    color: #4b5563;
+
+    font-size: 15px;
+}
+
+.ai-advice p:empty {
+    display: none;
 }
 
 
-/* Career Score */
+/* ============================= */
+/* CAREER READINESS */
+/* ============================= */
 
 .career-score-card {
-    margin-top: 20px;
+    margin-top: 0;
 }
 
 .career-score {
     display: flex;
     align-items: center;
     gap: 25px;
-    margin: 20px 0;
+
+    padding: 20px;
+
+    background: #f8fafc;
+
+    border-radius: 14px;
+
+    border: 1px solid #e5e7eb;
 }
 
 .score-number {
+    min-width: 100px;
+
     font-size: 42px;
-    font-weight: bold;
+    font-weight: 800;
+
+    color: #2563eb;
+}
+
+.score-text strong {
+    color: #1f2937;
+    font-size: 17px;
 }
 
 .score-text p {
-    margin-top: 5px;
+    margin: 6px 0 0;
+
+    color: #6b7280;
+
+    line-height: 1.5;
 }
 
 
-/* Learning Roadmap */
+/* ============================= */
+/* RECOMMENDED ROLES */
+/* ============================= */
+
+.role-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.role-match {
+    padding: 19px;
+
+    border-radius: 12px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e2e8f0;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.role-match:hover {
+    transform: translateX(4px);
+
+    border-color: #bfdbfe;
+}
+
+.role-match-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 12px;
+}
+
+.role-name {
+    font-size: 17px;
+
+    font-weight: 700;
+
+    color: #1e293b;
+}
+
+.match-percentage {
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* ============================= */
+/* PROGRESS BAR */
+/* ============================= */
+
+.progress-bar {
+    width: 100%;
+
+    height: 10px;
+
+    background: #e5e7eb;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+
+    border-radius: 10px;
+
+    background: #2563eb;
+
+    transition: width 0.6s ease;
+}
+
+
+/* ============================= */
+/* SKILLS */
+/* ============================= */
+
+.analysis-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.analysis-item {
+    padding: 14px 16px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    color: #374151;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+.analysis-item:hover {
+    transform: translateX(4px);
+
+    background: #f1f5f9;
+}
+
+
+/* ============================= */
+/* SKILL GAPS */
+/* ============================= */
+
+.skill-gap {
+    color: #b45309;
+
+    background: #fff7ed;
+
+    border-color: #fed7aa;
+}
+
+.skill-gap:hover {
+    background: #ffedd5;
+}
+
+
+/* ============================= */
+/* LEARNING ROADMAP */
+/* ============================= */
 
 .roadmap {
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .roadmap-step {
+    position: relative;
+
     display: flex;
-    align-items: center;
+
+    align-items: flex-start;
+
     gap: 15px;
-    padding: 15px 0;
+
+    padding: 17px 0;
+
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.roadmap-step:last-child {
+    border-bottom: none;
 }
 
 .roadmap-number {
-    width: 35px;
-    height: 35px;
+    width: 38px;
+    height: 38px;
+
+    min-width: 38px;
+
     border-radius: 50%;
+
     display: flex;
+
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    border: 1px solid currentColor;
+
+    font-weight: 700;
+
+    color: #2563eb;
+
+    background: #eff6ff;
+
+    border: 1px solid #bfdbfe;
 }
 
 .roadmap-step h3 {
     margin: 0;
+
+    font-size: 16px;
+
+    color: #1f2937;
 }
 
 .roadmap-step p {
     margin: 5px 0 0;
+
+    color: #6b7280;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+
+/* ============================= */
+/* LOADING / ERROR */
+/* ============================= */
+
+.career-analysis-message {
+    min-height: 60vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    color: #6b7280;
+}
+
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 700px) {
+
+    .career-analysis-page {
+        padding: 35px 5%;
+    }
+
+    .career-analysis-header {
+        margin-bottom: 30px;
+    }
+
+    .career-analysis-header h1 {
+        font-size: 30px;
+    }
+
+    .career-analysis-header p {
+        font-size: 15px;
+    }
+
+    .analysis-card {
+        padding: 22px;
+    }
+
+    .analysis-card h2 {
+        font-size: 20px;
+    }
+
+    .career-score {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 10px;
+    }
+
+    .score-number {
+        font-size: 38px;
+    }
+
+    .role-match-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 8px;
+    }
+
+    .match-percentage {
+        align-self: flex-start;
+    }
+
+    .roadmap-step {
+        gap: 12px;
+    }
 }

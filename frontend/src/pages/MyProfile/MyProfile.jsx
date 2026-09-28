@@ -137,12 +137,10 @@ function MyProfile() {
 
             uploadData.append("resume", resumeFile);
 
-            const response = await axios.post(
+            await axios.post(
                 `http://localhost:8080/student-profiles/${studentId}/resume`,
                 uploadData
             );
-
-            console.log(response.data);
 
             // Reload profile after successful upload
             const profileResponse = await axios.get(
@@ -203,11 +201,13 @@ function MyProfile() {
                 </div>
 
                 <div>
+
                     <h1>{profile.student.name}</h1>
 
                     <p>
                         {profile.student.branch} | CGPA: {profile.student.cgpa}
                     </p>
+
                 </div>
 
                 <button

@@ -40,10 +40,6 @@ function Jobs() {
 
                 const studentId = student.id;
 
-                console.log(
-                    "Logged-in student ID:",
-                    studentId
-                );
 
 
                 // =====================================
@@ -68,10 +64,7 @@ function Jobs() {
                 const recommendations =
                     recommendationResponse.data;
 
-                console.log(
-                    "AI Job Recommendations:",
-                    recommendations
-                );
+
 
                 setRecommendedJobs(
                     recommendations

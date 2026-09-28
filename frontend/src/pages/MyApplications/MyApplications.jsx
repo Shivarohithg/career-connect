@@ -37,29 +37,20 @@ function MyApplications() {
                 return;
             }
 
-            const studentId = student.id;
-
-            console.log("Logged-in student ID:", studentId);
-
-            const data = await getApplicationsByStudent(studentId);
-
-            console.log("Applications received:", data);
+            const data = await getApplicationsByStudent(student.id);
 
             if (!Array.isArray(data)) {
-                throw new Error("Invalid applications data received from server.");
+                throw new Error(
+                    "Invalid applications data received from server."
+                );
             }
 
             setApplications(data);
-
             setError("");
 
         } catch (error) {
 
-            console.error("FULL ERROR:", error);
-            console.error("ERROR MESSAGE:", error.message);
-            console.error("ERROR RESPONSE:", error.response);
-            console.error("ERROR DATA:", error.response?.data);
-            console.error("ERROR STATUS:", error.response?.status);
+            console.error("Error loading applications:", error);
 
             if (error.response) {
 
@@ -78,8 +69,7 @@ function MyApplications() {
             } else {
 
                 setError(
-                    error.message ||
-                    "Unable to load applications."
+                    error.message || "Unable to load applications."
                 );
             }
 
@@ -100,6 +90,24 @@ function MyApplications() {
     }, [loadApplications]);
 
 
+    const totalApplications = applications.length;
+
+    const appliedCount = applications.filter(
+        (application) =>
+            application.status?.toUpperCase() === "APPLIED"
+    ).length;
+
+    const interviewCount = applications.filter(
+        (application) =>
+            application.status?.toUpperCase() === "INTERVIEW"
+    ).length;
+
+    const rejectedCount = applications.filter(
+        (application) =>
+            application.status?.toUpperCase() === "REJECTED"
+    ).length;
+
+
     if (loading) {
 
         return (
@@ -117,7 +125,6 @@ function MyApplications() {
 
             </div>
         );
-
     }
 
 
@@ -128,13 +135,11 @@ function MyApplications() {
             <div className="applications-header">
 
                 <div>
-
                     <h1>My Applications</h1>
 
                     <p>
                         Track the jobs you have applied for.
                     </p>
-
                 </div>
 
                 <button
@@ -148,6 +153,66 @@ function MyApplications() {
                 </button>
 
             </div>
+
+
+            {!error && (
+
+                <div className="application-summary">
+
+                    <div className="summary-card">
+
+                        <span className="summary-number">
+                            {totalApplications}
+                        </span>
+
+                        <span className="summary-label">
+                            Total
+                        </span>
+
+                    </div>
+
+
+                    <div className="summary-card">
+
+                        <span className="summary-number">
+                            {appliedCount}
+                        </span>
+
+                        <span className="summary-label">
+                            Applied
+                        </span>
+
+                    </div>
+
+
+                    <div className="summary-card">
+
+                        <span className="summary-number">
+                            {interviewCount}
+                        </span>
+
+                        <span className="summary-label">
+                            Interview
+                        </span>
+
+                    </div>
+
+
+                    <div className="summary-card">
+
+                        <span className="summary-number">
+                            {rejectedCount}
+                        </span>
+
+                        <span className="summary-label">
+                            Rejected
+                        </span>
+
+                    </div>
+
+                </div>
+
+            )}
 
 
             {error && (
@@ -171,6 +236,10 @@ function MyApplications() {
 
                 <div className="no-applications">
 
+                    <div className="empty-icon">
+                        📄
+                    </div>
+
                     <h2>
                         No Applications Yet
                     </h2>
@@ -192,83 +261,148 @@ function MyApplications() {
 
             {!error && applications.length > 0 && (
 
-                <div className="applications-grid">
+                <div className="applications-section">
 
-                    {applications.map((application) => {
+                    <h2 className="applications-section-title">
+                        Your Applications
+                    </h2>
 
-                        const job = application.job;
 
-                        return (
+                    <div className="applications-grid">
 
-                            <div
-                                className="application-card"
-                                key={application.id}
-                            >
+                        {applications.map((application) => {
 
-                                <div className="application-header">
+                            const job = application.job;
 
-                                    <div className="company-logo">
+                            const status =
+                                application.status || "APPLIED";
 
-                                        {job?.company
-                                            ? job.company.charAt(0).toUpperCase()
-                                            : "C"}
+                            return (
+
+                                <div
+                                    className="application-card"
+                                    key={application.id}
+                                >
+
+                                    <div className="application-header">
+
+                                        <div className="company-logo">
+
+                                            {job?.company
+                                                ? job.company
+                                                    .charAt(0)
+                                                    .toUpperCase()
+                                                : "C"}
+
+                                        </div>
+
+
+                                        <div className="application-job-info">
+
+                                            <h2>
+                                                {job?.title || "Job"}
+                                            </h2>
+
+                                            <p>
+                                                {job?.company || "Company"}
+                                            </p>
+
+                                        </div>
 
                                     </div>
 
-                                    <div>
 
-                                        <h2>
-                                            {job?.title || "Job"}
-                                        </h2>
+                                    <div className="application-details">
 
-                                        <p>
-                                            {job?.company || "Company"}
-                                        </p>
+                                        <div className="application-detail">
+
+                                            <span>📍</span>
+
+                                            <div>
+                                                <strong>Location</strong>
+
+                                                <p>
+                                                    {job?.location ||
+                                                        "Not available"}
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+
+                                        <div className="application-detail">
+
+                                            <span>💰</span>
+
+                                            <div>
+                                                <strong>Salary</strong>
+
+                                                <p>
+                                                    {typeof job?.salary ===
+                                                    "number"
+                                                        ? `₹${job.salary.toLocaleString(
+                                                            "en-IN"
+                                                        )}`
+                                                        : "Not available"}
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+
+                                        <div className="application-detail">
+
+                                            <span>📅</span>
+
+                                            <div>
+                                                <strong>Applied On</strong>
+
+                                                <p>
+                                                    {application.appliedDate ||
+                                                        "N/A"}
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div className="application-footer">
+
+                                        <span
+                                            className={`application-status status-${status
+                                                .toLowerCase()
+                                                .replace(/\s+/g, "-")}`}
+                                        >
+                                            {status}
+                                        </span>
+
+
+                                        {job?.id && (
+
+                                            <button
+                                                className="view-job-button"
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/jobs/${job.id}`
+                                                    )
+                                                }
+                                            >
+                                                View Job
+                                            </button>
+
+                                        )}
 
                                     </div>
 
                                 </div>
 
+                            );
 
-                                <div className="application-details">
+                        })}
 
-                                    <p>
-                                        📍{" "}
-                                        {job?.location || "Location not available"}
-                                    </p>
-
-                                    <p>
-                                        💰 ₹
-                                        {typeof job?.salary === "number"
-                                            ? job.salary.toLocaleString("en-IN")
-                                            : "Not available"}
-                                    </p>
-
-                                    <p>
-                                        📅 Applied on:{" "}
-                                        {application.appliedDate || "N/A"}
-                                    </p>
-
-                                </div>
-
-
-                                <div className="application-status">
-
-                                    <span
-                                        className={`status-${application.status
-                                            ?.toLowerCase()
-                                            .replace(/\s+/g, "-")}`}
-                                    >
-                                        {application.status || "APPLIED"}
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                        );
-
-                    })}
+                    </div>
 
                 </div>
 

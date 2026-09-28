@@ -156,15 +156,7 @@ function JobDetails() {
             const studentId =
                 student.id;
 
-            console.log(
-                "Applying with student ID:",
-                studentId
-            );
 
-            console.log(
-                "Job ID:",
-                id
-            );
 
             if (!studentId) {
 
