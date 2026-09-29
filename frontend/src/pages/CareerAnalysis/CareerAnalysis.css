@@ -453,3 +453,87 @@
         gap: 12px;
     }
 }
+
+/* ============================= */
+/* ADDITIONAL AI SECTIONS */
+/* ============================= */
+
+.ai-section-card {
+    border-left: 5px solid #7c3aed;
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #faf9ff
+        );
+}
+
+.ai-section-card h2 {
+    color: #4c1d95;
+}
+
+
+/* ============================= */
+/* PROJECT RECOMMENDATION */
+/* ============================= */
+
+.ai-section-card:nth-last-child(2) {
+    border-left-color: #059669;
+}
+
+.ai-section-card:nth-last-child(2) h2 {
+    color: #047857;
+}
+
+
+/* ============================= */
+/* INTERVIEW PREPARATION */
+/* ============================= */
+
+.ai-section-card h2 {
+    line-height: 1.4;
+}
+
+
+/* ============================= */
+/* NEXT ACTION */
+/* ============================= */
+
+.next-action-card {
+    border-left: 5px solid #2563eb;
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #ffffff
+        );
+}
+
+.next-action-card h2 {
+    color: #1d4ed8;
+}
+
+
+/* ============================= */
+/* AI TEXT CONTENT */
+/* ============================= */
+
+.ai-section-card .ai-advice,
+.next-action-card .ai-advice {
+    margin-top: 12px;
+}
+
+.ai-section-card .ai-advice p,
+.next-action-card .ai-advice p {
+    margin: 0;
+    line-height: 1.8;
+}
+
+
+/* ============================= */
+/* EMPTY AI SECTIONS */
+/* ============================= */
+
+.ai-section-card:empty {
+    display: none;
+}

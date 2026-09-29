@@ -3,10 +3,14 @@ package com.careerconnect.backend.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CareerRecommendationService {
+
+    @Autowired
+    private OllamaService ollamaService;
 
     public String generateCareerAdvice(
             String studentSkills,
@@ -36,7 +40,9 @@ public class CareerRecommendationService {
         StringBuilder advice =
                 new StringBuilder();
 
-        advice.append("AI CAREER INSIGHTS\n\n");
+        advice.append(
+                "AI CAREER INSIGHTS\n\n"
+        );
 
         advice.append(
                 "Career Readiness Score: "
@@ -347,7 +353,28 @@ public class CareerRecommendationService {
         }
 
 
-        return advice.toString();
+        /*
+         * =========================================================
+         * REAL AI INTEGRATION
+         * =========================================================
+         *
+         * Everything above creates a deterministic analysis.
+         * Ollama receives that analysis together with the
+         * student's actual skills, roles and skill gaps.
+         *
+         * Qwen then generates the personalized explanation,
+         * roadmap, project recommendation and interview advice.
+         */
+
+        String baseAnalysis =
+                advice.toString();
+
+        return ollamaService.generateCareerAdvice(
+                studentSkills,
+                recommendedRoles,
+                skillGaps,
+                baseAnalysis
+        );
     }
 
 
@@ -371,8 +398,7 @@ public class CareerRecommendationService {
         }
 
         int score =
-                (skillCount * 100)
-                        / total;
+                (skillCount * 100) / total;
 
         return Math.min(
                 score,
@@ -382,7 +408,7 @@ public class CareerRecommendationService {
 
 
     /*
-     * PARSE COMMA-SEPARATED VALUES
+     * PARSE SKILLS
      */
 
     private List<String> parseList(
@@ -443,7 +469,7 @@ public class CareerRecommendationService {
 
 
     /*
-     * GET BEST ROLE MATCH %
+     * GET BEST ROLE PERCENTAGE
      */
 
     private int getBestRolePercentage(
@@ -463,8 +489,7 @@ public class CareerRecommendationService {
         try {
 
             int start =
-                    firstRole.lastIndexOf("(")
-                            + 1;
+                    firstRole.lastIndexOf("(") + 1;
 
             int end =
                     firstRole.indexOf(

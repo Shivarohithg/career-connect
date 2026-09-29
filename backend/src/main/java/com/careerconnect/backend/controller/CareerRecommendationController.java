@@ -32,21 +32,17 @@ public class CareerRecommendationController {
     public String getCareerRecommendation(
             @PathVariable int studentId) {
 
-        Student student =
-                studentRepository.findById(studentId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Student not found"));
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Student not found"));
 
-        StudentProfile profile =
-                studentProfileRepository.findByStudent(student)
-                        .orElseThrow(() ->
-                                new RuntimeException("Profile not found"));
+        StudentProfile profile = studentProfileRepository.findByStudent(student)
+                .orElseThrow(() ->
+                        new RuntimeException("Profile not found"));
 
-        CareerAnalysis analysis =
-                careerAnalysisRepository.findByStudent(student)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Career analysis not found"));
+        CareerAnalysis analysis = careerAnalysisRepository.findByStudent(student)
+                .orElseThrow(() ->
+                        new RuntimeException("Career analysis not found"));
 
         return recommendationService.generateCareerAdvice(
                 profile.getSkills(),
