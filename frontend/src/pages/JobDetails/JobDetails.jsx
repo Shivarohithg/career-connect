@@ -1,23 +1,48 @@
 import { useEffect, useState } from "react";
+
 import { useNavigate, useParams } from "react-router-dom";
+
 import { getJobById } from "../../services/jobService";
+
 import { applyForJob } from "../../services/applicationService";
+
 import "./JobDetails.css";
+
 
 function JobDetails() {
 
     const { id } = useParams();
+
     const navigate = useNavigate();
 
+
     const [job, setJob] = useState(null);
+
     const [loading, setLoading] = useState(true);
+
     const [error, setError] = useState("");
 
+
     const [aiRecommendation, setAiRecommendation] = useState(null);
+
     const [aiLoading, setAiLoading] = useState(true);
 
+
+    const [jobAIInsight, setJobAIInsight] = useState("");
+
+    const [jobAIInsightLoading, setJobAIInsightLoading] = useState(true);
+
+    const [jobAIInsightError, setJobAIInsightError] = useState("");
+
+
     const [applying, setApplying] = useState(false);
+
     const [applicationMessage, setApplicationMessage] = useState("");
+
+
+    /*
+     * LOAD JOB DETAILS
+     */
 
     useEffect(() => {
 
@@ -26,6 +51,7 @@ function JobDetails() {
             try {
 
                 setLoading(true);
+
                 setError("");
 
                 const data = await getJobById(id);
@@ -48,12 +74,17 @@ function JobDetails() {
                 setLoading(false);
 
             }
+
         };
 
         loadJob();
 
     }, [id]);
 
+
+    /*
+     * LOAD DETERMINISTIC AI JOB RECOMMENDATION
+     */
 
     useEffect(() => {
 
@@ -67,8 +98,11 @@ function JobDetails() {
                     localStorage.getItem("student");
 
                 if (!storedStudent) {
+
                     setAiRecommendation(null);
+
                     return;
+
                 }
 
                 const student =
@@ -78,8 +112,11 @@ function JobDetails() {
                     student.id;
 
                 if (!studentId) {
+
                     setAiRecommendation(null);
+
                     return;
+
                 }
 
                 const response =
@@ -88,9 +125,11 @@ function JobDetails() {
                     );
 
                 if (!response.ok) {
+
                     throw new Error(
                         "Unable to load AI recommendation."
                     );
+
                 }
 
                 const recommendations =
@@ -122,6 +161,7 @@ function JobDetails() {
                 setAiLoading(false);
 
             }
+
         };
 
         loadAIRecommendation();
@@ -129,15 +169,176 @@ function JobDetails() {
     }, [id]);
 
 
+    /*
+     * LOAD OLLAMA JOB-SPECIFIC AI INSIGHT
+     */
+
+    useEffect(() => {
+
+        const loadJobAIInsight = async () => {
+
+            try {
+
+                setJobAIInsightLoading(true);
+
+                setJobAIInsightError("");
+
+                setJobAIInsight("");
+
+
+                const storedStudent =
+                    localStorage.getItem("student");
+
+
+                if (!storedStudent) {
+
+                    setJobAIInsightError(
+                        "Please login to generate the AI job insight."
+                    );
+
+                    return;
+
+                }
+
+
+                const student =
+                    JSON.parse(storedStudent);
+
+
+                const studentId =
+                    student.id;
+
+
+                if (!studentId || !id) {
+
+                    setJobAIInsightError(
+                        "Student or job information is missing."
+                    );
+
+                    return;
+
+                }
+
+
+                console.log(
+                    "Loading Ollama job insight..."
+                );
+
+                console.log(
+                    "Student ID:",
+                    studentId
+                );
+
+                console.log(
+                    "Job ID:",
+                    id
+                );
+
+
+                const insightUrl =
+                    `http://localhost:8080/ai/job-insight/${studentId}/${id}`;
+
+
+                console.log(
+                    "Calling:",
+                    insightUrl
+                );
+
+
+                const response =
+                    await fetch(insightUrl);
+
+
+                console.log(
+                    "Ollama insight HTTP status:",
+                    response.status
+                );
+
+
+                if (!response.ok) {
+
+                    const errorText =
+                        await response.text();
+
+                    console.error(
+                        "Ollama insight error:",
+                        errorText
+                    );
+
+                    throw new Error(
+                        errorText ||
+                        "Unable to load AI job insight."
+                    );
+
+                }
+
+
+                const insight =
+                    await response.text();
+
+
+                console.log(
+                    "Ollama insight response:",
+                    insight
+                );
+
+
+                if (!insight || !insight.trim()) {
+
+                    throw new Error(
+                        "Ollama returned an empty response."
+                    );
+
+                }
+
+
+                setJobAIInsight(
+                    insight.trim()
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Error loading AI job insight:",
+                    error
+                );
+
+                setJobAIInsightError(
+                    error.message ||
+                    "Unable to load AI job insight."
+                );
+
+                setJobAIInsight("");
+
+            } finally {
+
+                setJobAIInsightLoading(false);
+
+            }
+
+        };
+
+        loadJobAIInsight();
+
+    }, [id]);
+
+
+    /*
+     * APPLY FOR JOB
+     */
+
     const handleApply = async () => {
 
         try {
 
             setApplying(true);
+
             setApplicationMessage("");
+
 
             const storedStudent =
                 localStorage.getItem("student");
+
 
             if (!storedStudent) {
 
@@ -148,14 +349,16 @@ function JobDetails() {
                 navigate("/login");
 
                 return;
+
             }
+
 
             const student =
                 JSON.parse(storedStudent);
 
+
             const studentId =
                 student.id;
-
 
 
             if (!studentId) {
@@ -165,12 +368,15 @@ function JobDetails() {
                 );
 
                 return;
+
             }
+
 
             await applyForJob(
                 studentId,
                 id
             );
+
 
             setApplicationMessage(
                 "Application submitted successfully!"
@@ -182,6 +388,7 @@ function JobDetails() {
                 "Error applying for job:",
                 error
             );
+
 
             if (
                 error.response?.status === 409
@@ -212,43 +419,81 @@ function JobDetails() {
             setApplying(false);
 
         }
+
     };
 
+
+    /*
+     * LOADING
+     */
 
     if (loading) {
 
         return (
+
             <div className="job-details-page">
+
                 <h2>
                     Loading job details...
                 </h2>
+
             </div>
+
         );
+
     }
 
+
+    /*
+     * ERROR
+     */
 
     if (error) {
 
         return (
+
             <div className="job-details-page">
-                <h2>{error}</h2>
+
+                <h2>
+                    {error}
+                </h2>
+
             </div>
+
         );
+
     }
 
+
+    /*
+     * JOB NOT FOUND
+     */
 
     if (!job) {
 
         return (
+
             <div className="job-details-page">
-                <h2>Job not found.</h2>
+
+                <h2>
+                    Job not found.
+                </h2>
+
             </div>
+
         );
+
     }
 
 
+    /*
+     * PAGE
+     */
+
     return (
+
         <div className="job-details-page">
+
 
             <button
                 className="back-button"
@@ -260,13 +505,19 @@ function JobDetails() {
 
             <div className="job-details-card">
 
+
+                {/* JOB HEADER */}
+
                 <div className="job-details-header">
 
                     <div className="details-company-logo">
+
                         {job.company
                             ?.charAt(0)
                             .toUpperCase()}
+
                     </div>
+
 
                     <div>
 
@@ -283,13 +534,19 @@ function JobDetails() {
                 </div>
 
 
+                {/* JOB INFORMATION */}
+
                 <div className="job-details-info">
+
 
                     <div className="details-item">
 
-                        <span>📍</span>
+                        <span>
+                            📍
+                        </span>
 
                         <div>
+
                             <strong>
                                 Location
                             </strong>
@@ -297,6 +554,7 @@ function JobDetails() {
                             <p>
                                 {job.location}
                             </p>
+
                         </div>
 
                     </div>
@@ -304,7 +562,9 @@ function JobDetails() {
 
                     <div className="details-item">
 
-                        <span>💰</span>
+                        <span>
+                            💰
+                        </span>
 
                         <div>
 
@@ -313,11 +573,13 @@ function JobDetails() {
                             </strong>
 
                             <p>
+
                                 ₹
                                 {job.salary
                                     ?.toLocaleString(
                                         "en-IN"
                                     )}
+
                             </p>
 
                         </div>
@@ -327,7 +589,9 @@ function JobDetails() {
 
                     <div className="details-item">
 
-                        <span>💼</span>
+                        <span>
+                            💼
+                        </span>
 
                         <div>
 
@@ -343,170 +607,309 @@ function JobDetails() {
 
                     </div>
 
+
                 </div>
 
 
                 <hr />
 
 
+                {/* EXISTING AI MATCH */}
+
                 {!aiLoading &&
                     aiRecommendation && (
+
+                        <section className="job-ai-section">
+
+
+                            <div className="job-ai-header">
+
+                                <div>
+
+                                    <span className="job-ai-label">
+                                        🤖 AI CAREER INTELLIGENCE
+                                    </span>
+
+                                    <h2>
+                                        Your AI Match
+                                    </h2>
+
+                                </div>
+
+
+                                <div className="job-ai-percentage">
+
+                                    ⭐{" "}
+
+                                    {
+                                        aiRecommendation
+                                            .matchPercentage
+                                    }%
+
+                                </div>
+
+                            </div>
+
+
+                            <div className="job-ai-role">
+
+                                <span>
+                                    🎯 Career Direction
+                                </span>
+
+                                <strong>
+                                    {
+                                        aiRecommendation
+                                            .matchedRole
+                                    }
+                                </strong>
+
+                            </div>
+
+
+                            {aiRecommendation
+                                .matchedSkills
+                                ?.length > 0 && (
+
+                                    <div className="job-ai-skills">
+
+                                        <h3>
+                                            ✓ Matched Skills
+                                        </h3>
+
+
+                                        <div className="job-ai-skill-list">
+
+                                            {aiRecommendation
+                                                .matchedSkills
+                                                .map(
+                                                    (
+                                                        skill,
+                                                        index
+                                                    ) => (
+
+                                                        <span
+                                                            className="job-ai-skill matched"
+                                                            key={index}
+                                                        >
+                                                            ✓ {skill}
+                                                        </span>
+
+                                                    )
+                                                )}
+
+                                        </div>
+
+                                    </div>
+
+                                )}
+
+
+                            {aiRecommendation
+                                .missingSkills
+                                ?.length > 0 && (
+
+                                    <div className="job-ai-skills">
+
+                                        <h3>
+                                            ⚠ Skills to Improve
+                                        </h3>
+
+
+                                        <div className="job-ai-skill-list">
+
+                                            {aiRecommendation
+                                                .missingSkills
+                                                .map(
+                                                    (
+                                                        skill,
+                                                        index
+                                                    ) => (
+
+                                                        <span
+                                                            className="job-ai-skill missing"
+                                                            key={index}
+                                                        >
+                                                            {skill}
+                                                        </span>
+
+                                                    )
+                                                )}
+
+                                        </div>
+
+                                    </div>
+
+                                )}
+
+
+                            {aiRecommendation
+                                .explanation && (
+
+                                    <div className="job-ai-explanation">
+
+                                        <strong>
+                                            💡 Why this match?
+                                        </strong>
+
+                                        <p>
+                                            {
+                                                aiRecommendation
+                                                    .explanation
+                                            }
+                                        </p>
+
+                                    </div>
+
+                                )}
+
+                        </section>
+
+                    )}
+
+
+                {/* 
+                    OLLAMA AI JOB INSIGHT
+
+                    IMPORTANT:
+                    We are intentionally displaying the
+                    raw response here first.
+
+                    This proves the frontend is receiving
+                    the backend/Ollama response.
+
+                    After this works, we can format the
+                    individual sections.
+                */}
+
+                {jobAIInsightLoading && (
 
                     <section className="job-ai-section">
 
                         <div className="job-ai-header">
 
                             <div>
+
                                 <span className="job-ai-label">
-                                    🤖 AI CAREER INTELLIGENCE
+                                    ✨ OLLAMA AI INSIGHT
                                 </span>
 
                                 <h2>
-                                    Your AI Match
+                                    AI Analysis of This Job
                                 </h2>
-                            </div>
 
-                            <div className="job-ai-percentage">
-                                ⭐{" "}
-                                {
-                                    aiRecommendation
-                                        .matchPercentage
-                                }%
                             </div>
 
                         </div>
 
 
-                        <div className="job-ai-role">
+                        <div className="job-ai-explanation">
 
-                            <span>
-                                🎯 Career Direction
-                            </span>
-
-                            <strong>
-                                {
-                                    aiRecommendation
-                                        .matchedRole
-                                }
-                            </strong>
+                            <p>
+                                Generating personalized AI
+                                insight for this job...
+                            </p>
 
                         </div>
 
+                    </section>
 
-                        {aiRecommendation
-                            .matchedSkills
-                            ?.length > 0 && (
+                )}
 
-                            <div className="job-ai-skills">
 
-                                <h3>
-                                    ✓ Matched Skills
-                                </h3>
+                {!jobAIInsightLoading &&
+                    jobAIInsight && (
 
-                                <div className="job-ai-skill-list">
+                        <section className="job-ai-section">
 
-                                    {aiRecommendation
-                                        .matchedSkills
-                                        .map(
-                                            (
-                                                skill,
-                                                index
-                                            ) => (
 
-                                                <span
-                                                    className="job-ai-skill matched"
-                                                    key={index}
-                                                >
-                                                    ✓ {skill}
-                                                </span>
+                            <div className="job-ai-header">
 
-                                            )
-                                        )}
+                                <div>
+
+                                    <span className="job-ai-label">
+                                        ✨ OLLAMA AI INSIGHT
+                                    </span>
+
+                                    <h2>
+                                        AI Analysis of This Job
+                                    </h2>
+
+                                    <p>
+                                        Personalized guidance based
+                                        on your profile and this
+                                        specific job.
+                                    </p>
 
                                 </div>
 
                             </div>
-                        )}
 
-
-                        {aiRecommendation
-                            .missingSkills
-                            ?.length > 0 && (
-
-                            <div className="job-ai-skills">
-
-                                <h3>
-                                    ⚠ Skills to Improve
-                                </h3>
-
-                                <div className="job-ai-skill-list">
-
-                                    {aiRecommendation
-                                        .missingSkills
-                                        .map(
-                                            (
-                                                skill,
-                                                index
-                                            ) => (
-
-                                                <span
-                                                    className="job-ai-skill missing"
-                                                    key={index}
-                                                >
-                                                    {skill}
-                                                </span>
-
-                                            )
-                                        )}
-
-                                </div>
-
-                            </div>
-                        )}
-
-
-                        {aiRecommendation
-                            .explanation && (
 
                             <div className="job-ai-explanation">
 
-                                <strong>
-                                    💡 Why this match?
-                                </strong>
-
-                                <p>
-                                    {
-                                        aiRecommendation
-                                            .explanation
-                                    }
-                                </p>
+                                <pre
+                                    style={{
+                                        whiteSpace: "pre-wrap",
+                                        fontFamily: "inherit",
+                                        lineHeight: "1.7",
+                                        margin: 0
+                                    }}
+                                >
+                                    {jobAIInsight}
+                                </pre>
 
                             </div>
-                        )}
 
-                    </section>
-                )}
 
+                        </section>
+
+                    )}
+
+
+                {!jobAIInsightLoading &&
+                    !jobAIInsight &&
+                    jobAIInsightError && (
+
+                        <section className="job-ai-no-match">
+
+                            <h2>
+                                ✨ Ollama AI Insight
+                            </h2>
+
+                            <p>
+                                {jobAIInsightError}
+                            </p>
+
+                        </section>
+
+                    )}
+
+
+                {/* NO AI RECOMMENDATION */}
 
                 {!aiLoading &&
                     !aiRecommendation && (
 
-                    <section className="job-ai-no-match">
+                        <section className="job-ai-no-match">
 
-                        <h2>
-                            🤖 AI Career Intelligence
-                        </h2>
+                            <h2>
+                                🤖 AI Career Intelligence
+                            </h2>
 
-                        <p>
-                            This job does not currently
-                            match your profile strongly
-                            enough to appear as an AI
-                            recommendation.
-                        </p>
+                            <p>
+                                This job does not currently
+                                match your profile strongly
+                                enough to appear as an AI
+                                recommendation.
+                            </p>
 
-                    </section>
-                )}
+                        </section>
 
+                    )}
+
+
+                {/* ABOUT JOB */}
 
                 <section className="job-description">
 
@@ -514,31 +917,43 @@ function JobDetails() {
                         About This Job
                     </h2>
 
-                    <p>
-                        Join {job.company} as a{" "}
-                        {job.title}.
-                        This opportunity is based
-                        in {job.location}.
-                    </p>
 
                     <p>
+
+                        Join {job.company} as a{" "}
+
+                        {job.title}.
+
+                        This opportunity is based
+                        in {job.location}.
+
+                    </p>
+
+
+                    <p>
+
                         Explore this opportunity and
                         take the next step in your
                         career journey with
                         CareerConnect.
+
                     </p>
 
                 </section>
 
+
+                {/* APPLY */}
 
                 <button
                     className="apply-button"
                     onClick={handleApply}
                     disabled={applying}
                 >
+
                     {applying
                         ? "Applying..."
                         : "Apply Now"}
+
                 </button>
 
 
@@ -550,10 +965,14 @@ function JobDetails() {
 
                 )}
 
+
             </div>
 
         </div>
+
     );
+
 }
+
 
 export default JobDetails;

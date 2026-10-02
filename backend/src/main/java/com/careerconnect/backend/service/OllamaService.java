@@ -17,6 +17,12 @@ public class OllamaService {
                 .build();
     }
 
+    /*
+     * =========================================================
+     * CAREER ANALYSIS AI
+     * =========================================================
+     */
+
     public String generateCareerAdvice(
             String studentSkills,
             String recommendedRoles,
@@ -57,50 +63,75 @@ public class OllamaService {
                 Based ONLY on the information provided above, generate
                 personalized career guidance.
 
-                Use this structure:
+                Use exactly this structure:
 
                 CAREER INSIGHTS:
-                Explain the student's current career position and
-                strongest career direction.
+                Explain the student's current career position and strongest
+                career direction in 2-3 sentences.
 
                 WHY THIS ROLE:
                 Explain why the top recommended role fits the student's
                 existing skills.
 
                 CURRENT STRENGTHS:
-                Identify the student's strongest existing technical skills.
+                List the student's strongest existing technical skills.
+                Use one skill per line.
 
                 SKILLS TO IMPROVE:
-                Identify the most important skills the student should
-                improve based on the identified gaps.
+                List the most important skills the student should improve
+                based on the identified skill gaps.
+                Use one skill per line.
 
                 LEARNING ROADMAP:
-                Create a practical 4-step learning roadmap.
-                Start with the highest-priority skill gap.
-                Order the steps logically from beginner to practical
-                application.
+                Create a personalized 4-step learning roadmap.
+
+                For EACH step provide:
+                Step number and skill/topic
+                Why it should be learned
+                What specific concepts to learn
+                One practical exercise or mini-task
+
+                Follow this progression:
+                Step 1 = highest-priority missing foundation
+                Step 2 = next important technical skill
+                Step 3 = practical application
+                Step 4 = project/interview readiness
+
+                Do NOT simply repeat "Learn <skill>".
+                Make every step actionable and specific.
 
                 PROJECT RECOMMENDATION:
                 Suggest ONE practical project that combines the student's
                 existing skills with the most important missing skill.
 
+                Include:
+                Project idea
+                Main features
+                Technologies to use
+                What the project demonstrates
+
                 INTERVIEW PREPARATION:
-                List the most important technical areas the student
-                should prepare for the recommended career direction.
+                List the most important technical areas the student should
+                prepare for the recommended career direction.
 
                 NEXT ACTION:
-                Give ONE clear action the student should take next.
+                Give ONE specific action the student should take next.
 
                 IMPORTANT RULES:
-                - Do not invent skills that the student does not have.
+                - Use ONLY the information provided.
+                - Do not invent skills the student does not have.
                 - Do not invent work experience.
                 - Do not invent certifications.
+                - Do not invent projects that the student already completed.
                 - Do not change the calculated career match.
                 - Do not create unsupported career roles.
                 - Use the identified skill gaps as the basis for the roadmap.
-                - Keep the response practical for a college student.
+                - Do not add unrelated technologies.
+                - Keep the roadmap realistic for a college student.
                 - Prefer specific technical advice over generic motivation.
-                - Keep the response concise but useful.
+                - Make the roadmap progressively harder.
+                - Keep each section concise but useful.
+                - Do not include markdown tables.
                 """.formatted(
                 studentSkills,
                 recommendedRoles,
@@ -141,14 +172,68 @@ public class OllamaService {
                             + e.getMessage()
             );
 
-            /*
-             * Fallback:
-             * If Ollama is not running, CareerConnect still returns
-             * the deterministic Java-based career analysis.
-             */
             return baseAnalysis;
         }
     }
+
+
+    /*
+     * =========================================================
+     * JOB-SPECIFIC AI INSIGHT
+     * =========================================================
+     */
+
+    public String generateJobInsight(
+            String prompt,
+            String fallback) {
+
+        try {
+
+            Map<String, Object> requestBody = Map.of(
+                    "model", "qwen2.5:0.5b",
+                    "prompt", prompt,
+                    "stream", false
+            );
+
+            OllamaResponse response =
+                    restClient.post()
+                            .uri("/api/generate")
+                            .body(requestBody)
+                            .retrieve()
+                            .body(OllamaResponse.class);
+
+            if (response == null ||
+                    response.response() == null ||
+                    response.response().trim().isEmpty()) {
+
+                throw new RuntimeException(
+                        "Ollama returned an empty response."
+                );
+            }
+
+            return response.response().trim();
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "Ollama Job AI unavailable: "
+                            + e.getMessage()
+            );
+
+            /*
+             * If Ollama is unavailable, return the deterministic
+             * job explanation instead of breaking the application.
+             */
+            return fallback;
+        }
+    }
+
+
+    /*
+     * =========================================================
+     * OLLAMA RESPONSE
+     * =========================================================
+     */
 
     private record OllamaResponse(
             String response

@@ -27,14 +27,12 @@ function CareerAnalysis() {
         const student = JSON.parse(storedStudent);
         const studentId = student.id;
 
-        // Get career analysis
         const analysisResponse = await axios.get(
           `http://localhost:8080/career-analysis/${studentId}`
         );
 
         setAnalysis(analysisResponse.data);
 
-        // Get AI career recommendation
         const adviceResponse = await axios.get(
           `http://localhost:8080/career-recommendation/${studentId}`
         );
@@ -87,10 +85,6 @@ function CareerAnalysis() {
     );
   }
 
-  // ==========================================
-  // Existing Career Analysis Data
-  // ==========================================
-
   const roles = analysis.recommendedRoles
     ? analysis.recommendedRoles
         .split(",")
@@ -128,10 +122,9 @@ function CareerAnalysis() {
       .trim();
   };
 
-  // ==========================================
-  // Extract AI Sections
-  // ==========================================
-
+  /*
+   * Extract a section from Ollama's response.
+   */
   const getAISection = (start, ends = []) => {
 
     const text = careerAdvice || "";
@@ -159,7 +152,6 @@ function CareerAnalysis() {
       if (index !== -1 && index < endIndex) {
         endIndex = index;
       }
-
     });
 
     return content
@@ -177,32 +169,48 @@ function CareerAnalysis() {
   );
 
   const whyRole = getAISection(
-    "Why This Role",
+    "WHY THIS ROLE",
     [
       "CURRENT STRENGTHS",
       "SKILLS TO IMPROVE"
     ]
   );
 
-  const projectRecommendation = getAISection(
-    "Project Recommendation",
+  const aiRoadmap = getAISection(
+    "LEARNING ROADMAP",
     [
-      "Interview Preparation",
+      "PROJECT RECOMMENDATION",
+      "INTERVIEW PREPARATION",
       "NEXT ACTION"
     ]
   );
 
+  const projectRecommendation = getAISection(
+    "PROJECT RECOMMENDATION",
+    [
+      "INTERVIEW PREPARATION",
+      "NEXT ACTION",
+      "IMPORTANT RULES"
+    ]
+  );
+
   const interviewPreparation = getAISection(
-    "Interview Preparation",
+    "INTERVIEW PREPARATION",
     [
       "NEXT ACTION",
       "IMPORTANT RULES"
     ]
   );
 
+  /*
+   * Stop NEXT ACTION from accidentally including
+   * Project Recommendation.
+   */
   const nextAction = getAISection(
     "NEXT ACTION",
     [
+      "PROJECT RECOMMENDATION",
+      "INTERVIEW PREPARATION",
       "IMPORTANT RULES"
     ]
   );
@@ -215,11 +223,21 @@ function CareerAnalysis() {
     ? readinessMatch[1]
     : "0";
 
+  /*
+   * Convert AI roadmap into individual steps.
+   */
+  const roadmapSteps = aiRoadmap
+    ? aiRoadmap
+        .split(/(?=Step\s*\d+|\d+\s*[-—:.])/i)
+        .map(step => step.trim())
+        .filter(Boolean)
+    : [];
+
   return (
 
     <div className="career-analysis-page">
 
-      {/* Header */}
+      {/* HEADER */}
 
       <div className="career-analysis-header">
 
@@ -234,7 +252,7 @@ function CareerAnalysis() {
       </div>
 
 
-      {/* AI Career Insights */}
+      {/* AI CAREER INSIGHTS */}
 
       <div className="analysis-card ai-career-card">
 
@@ -267,7 +285,7 @@ function CareerAnalysis() {
       </div>
 
 
-      {/* Career Readiness */}
+      {/* CAREER READINESS */}
 
       <div className="analysis-card career-score-card">
 
@@ -297,7 +315,7 @@ function CareerAnalysis() {
       </div>
 
 
-      {/* Recommended Roles */}
+      {/* RECOMMENDED ROLES */}
 
       <div className="analysis-card">
 
@@ -354,7 +372,7 @@ function CareerAnalysis() {
       </div>
 
 
-      {/* Recommended Skills */}
+      {/* RECOMMENDED SKILLS */}
 
       <div className="analysis-card">
 
@@ -378,7 +396,7 @@ function CareerAnalysis() {
       </div>
 
 
-      {/* Skill Gaps */}
+      {/* SKILL GAPS */}
 
       <div className="analysis-card">
 
@@ -402,7 +420,7 @@ function CareerAnalysis() {
       </div>
 
 
-      {/* AI Why This Role */}
+      {/* WHY THIS ROLE */}
 
       {whyRole && (
 
@@ -411,7 +429,9 @@ function CareerAnalysis() {
           <h2>💡 Why This Role?</h2>
 
           <div className="ai-advice">
+
             <p>{whyRole}</p>
+
           </div>
 
         </div>
@@ -419,7 +439,7 @@ function CareerAnalysis() {
       )}
 
 
-      {/* AI Learning Roadmap */}
+      {/* AI LEARNING ROADMAP */}
 
       <div className="analysis-card">
 
@@ -427,45 +447,51 @@ function CareerAnalysis() {
 
         <div className="roadmap">
 
-          {skillGaps.length > 0 ? (
+          {roadmapSteps.length > 0 ? (
 
-            skillGaps.slice(0, 4).map(
-              (gap, index) => (
+            roadmapSteps.map((step, index) => (
 
-                <div
-                  className="roadmap-step"
-                  key={index}
-                >
+              <div
+                className="roadmap-step"
+                key={index}
+              >
 
-                  <div className="roadmap-number">
-                    {index + 1}
-                  </div>
+                <div className="roadmap-number">
+                  {index + 1}
+                </div>
 
-                  <div>
+                <div>
 
-                    <h3>
-                      Learn {gap}
-                    </h3>
+                  <h3>
+                    {step
+                      .replace(/^Step\s*\d+\s*[-—:.]?\s*/i, "")
+                      .replace(/^\d+\s*[-—:.]?\s*/, "")
+                      .split("\n")[0]
+                    }
+                  </h3>
 
-                    <p>
-                      Focus on {gap} through
-                      practical exercises and
-                      project-based learning.
-                    </p>
-
-                  </div>
+                  <p>
+                    {step
+                      .split("\n")
+                      .slice(1)
+                      .join(" ")
+                      .trim() ||
+                      "Follow this step through practical learning and exercises."
+                    }
+                  </p>
 
                 </div>
 
-              )
-            )
+              </div>
+
+            ))
 
           ) : (
 
             <p>
-              Continue improving your existing
-              skills through projects and
-              interview practice.
+              AI roadmap could not be generated.
+              Continue improving your identified
+              skill gaps through practical projects.
             </p>
 
           )}
@@ -475,16 +501,18 @@ function CareerAnalysis() {
       </div>
 
 
-      {/* AI Project Recommendation */}
+      {/* PROJECT RECOMMENDATION */}
 
       {projectRecommendation && (
 
-        <div className="analysis-card ai-section-card">
+        <div className="analysis-card ai-section-card project-ai-card">
 
           <h2>🚀 Project Recommendation</h2>
 
           <div className="ai-advice">
+
             <p>{projectRecommendation}</p>
+
           </div>
 
         </div>
@@ -492,16 +520,18 @@ function CareerAnalysis() {
       )}
 
 
-      {/* AI Interview Preparation */}
+      {/* INTERVIEW PREPARATION */}
 
       {interviewPreparation && (
 
-        <div className="analysis-card ai-section-card">
+        <div className="analysis-card ai-section-card interview-ai-card">
 
           <h2>🎤 Interview Preparation</h2>
 
           <div className="ai-advice">
+
             <p>{interviewPreparation}</p>
+
           </div>
 
         </div>
@@ -509,7 +539,7 @@ function CareerAnalysis() {
       )}
 
 
-      {/* Next Action */}
+      {/* NEXT ACTION */}
 
       {nextAction && (
 
@@ -518,7 +548,9 @@ function CareerAnalysis() {
           <h2>🚀 Your Next Action</h2>
 
           <div className="ai-advice">
+
             <p>{nextAction}</p>
+
           </div>
 
         </div>
