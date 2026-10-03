@@ -1,6 +1,7 @@
 package com.careerconnect.backend.service;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class JobAIInsightService {
     @Autowired
     private OllamaService ollamaService;
 
+
     public String generateJobInsight(
             int studentId,
             int jobId,
@@ -48,92 +50,212 @@ public class JobAIInsightService {
                 .orElseThrow(() ->
                         new RuntimeException("Job not found"));
 
+
+        String matchedSkillsText =
+                matchedSkills == null || matchedSkills.isEmpty()
+                        ? "None"
+                        : String.join(", ", matchedSkills);
+
+        String missingSkillsText =
+                missingSkills == null || missingSkills.isEmpty()
+                        ? "None"
+                        : String.join(", ", missingSkills);
+
+
+        /*
+         * Ollama is used only as a natural-language explanation layer.
+         * CareerConnect remains responsible for the actual facts.
+         */
+
         String prompt = """
-                You are CareerConnect AI.
+                You are an explanation assistant for CareerConnect.
 
-                Analyze whether this job is suitable for the student.
+                Use ONLY these facts:
 
-                ==============================
-                STUDENT
-                ==============================
-                Name: %s
-                Branch: %s
-                CGPA: %s
-
-                ==============================
-                STUDENT SKILLS
-                ==============================
+                CAREER ROLE:
                 %s
 
-                ==============================
-                JOB
-                ==============================
-                Job Title: %s
-                Company: %s
-                Location: %s
+                MATCH PERCENTAGE:
+                %d%%
 
-                ==============================
-                MATCH ANALYSIS
-                ==============================
-                Matched Career Role: %s
-                Match Percentage: %d%%
-                Matched Skills: %s
-                Missing Skills: %s
+                MATCHED SKILLS:
+                %s
 
-                ==============================
-                YOUR TASK
-                ==============================
+                MISSING SKILLS:
+                %s
 
-                Generate a concise, personalized explanation of this job.
+                JOB TITLE:
+                %s
 
-                Use exactly this structure:
+                COMPANY:
+                %s
+
+                LOCATION:
+                %s
+
+                Your response must contain exactly these headings:
 
                 WHY THIS JOB:
-                Explain why this job matches the student's current
-                skills and career direction.
-
                 SKILLS YOU ALREADY HAVE:
-                Explain the strongest matching skills.
-
                 SKILLS TO IMPROVE:
-                Explain the most important missing skills.
-
                 APPLICATION ADVICE:
-                Give practical advice about what the student should
-                strengthen before or while applying.
-
                 INTERVIEW FOCUS:
-                List the technical areas the student should prepare
-                for if applying for this job.
 
-                IMPORTANT RULES:
-                - Use ONLY the information provided.
-                - Do not invent student skills.
-                - Do not invent experience.
-                - Do not invent certifications.
-                - Do not change the calculated match percentage.
-                - Do not invent job requirements.
-                - Keep the advice realistic for a college student.
-                - Be specific and practical.
-                - Keep the response concise.
+                Rules:
+
+                Only mention skills from MATCHED SKILLS or
+                MISSING SKILLS.
+
+                Do not mention any other technology.
+
+                Do not invent experience.
+
+                Do not invent projects.
+
+                Do not invent certifications.
+
+                Do not invent job requirements.
+
+                Do not add new career roles.
+
+                Do not change the match percentage.
+
+                Do not add any other headings.
+
+                Keep every section very short.
+
+                If MATCHED SKILLS contains Java and Spring Boot,
+                you may discuss Java and Spring Boot.
+
+                If MISSING SKILLS contains SQL,
+                you may discuss SQL.
+
+                Do not introduce React, Python, JavaScript, Docker,
+                AWS, Azure, Git, Maven, JPA, Spring Data, DSA,
+                communication skills, problem-solving skills, or any
+                other technology unless it appears in the supplied
+                matched or missing skill lists.
                 """.formatted(
-                student.getName(),
-                student.getBranch(),
-                student.getCgpa(),
-                profile.getSkills(),
-                job.getTitle(),
-                job.getCompany(),
-                job.getLocation(),
                 matchedRole,
                 matchPercentage,
-                String.join(", ", matchedSkills),
-                String.join(", ", missingSkills)
+                matchedSkillsText,
+                missingSkillsText,
+                job.getTitle(),
+                job.getCompany(),
+                job.getLocation()
         );
 
-        String fallback = """
+
+        String fallback = createDeterministicFallback(
+                matchedRole,
+                matchPercentage,
+                matchedSkills,
+                missingSkills
+        );
+
+
+        String aiResponse =
+                ollamaService.generateJobInsight(
+                        prompt,
+                        fallback
+                );
+
+
+        /*
+         * Validate the response before showing it to the user.
+         *
+         * Because qwen2.5:0.5b is a very small model, it can sometimes
+         * ignore instructions and invent additional information.
+         *
+         * If that happens, CareerConnect safely uses the deterministic
+         * fallback instead.
+         */
+
+        if (!isValidAIResponse(
+                aiResponse,
+                matchedSkills,
+                missingSkills
+        )) {
+
+            System.out.println(
+                    "Ollama response failed validation."
+            );
+
+            System.out.println(
+                    "Using deterministic CareerConnect fallback."
+            );
+
+            return fallback;
+        }
+
+
+        return aiResponse;
+    }
+
+
+    private String createDeterministicFallback(
+            String matchedRole,
+            int matchPercentage,
+            List<String> matchedSkills,
+            List<String> missingSkills) {
+
+        String matchedText =
+                matchedSkills == null || matchedSkills.isEmpty()
+                        ? "- None"
+                        : createBulletList(matchedSkills);
+
+        String missingText =
+                missingSkills == null || missingSkills.isEmpty()
+                        ? "- No major skill gaps identified."
+                        : createBulletList(missingSkills);
+
+
+        String applicationAdvice;
+
+        if (missingSkills == null ||
+                missingSkills.isEmpty()) {
+
+            applicationAdvice =
+                    "Your current matched skills cover the identified "
+                    + "skill requirements. Focus on revising these skills "
+                    + "and preparing for the application.";
+
+        } else {
+
+            applicationAdvice =
+                    "Focus on improving the identified missing skills "
+                    + "while continuing to strengthen your matched skills.";
+
+        }
+
+
+        String interviewFocus;
+
+        if (matchedSkills == null ||
+                matchedSkills.isEmpty()) {
+
+            interviewFocus =
+                    "Prepare the identified skill gaps for this role.";
+
+        } else if (missingSkills == null ||
+                missingSkills.isEmpty()) {
+
+            interviewFocus =
+                    "Revise your matched skills thoroughly for the interview.";
+
+        } else {
+
+            interviewFocus =
+                    "Revise the matched skills and prepare the identified "
+                    + "skill gaps for the interview.";
+
+        }
+
+
+        return """
                 WHY THIS JOB:
-                This job matches your current career direction based
-                on the calculated role and skill match.
+                The %s role matches your calculated career direction.
+                Your current calculated match is %d%% based on the identified skills.
 
                 SKILLS YOU ALREADY HAVE:
                 %s
@@ -142,16 +264,254 @@ public class JobAIInsightService {
                 %s
 
                 APPLICATION ADVICE:
-                Strengthen the missing skills while continuing to build
-                practical projects related to this career direction.
+                %s
 
                 INTERVIEW FOCUS:
-                Prepare the matched skills and the identified skill gaps.
+                %s
                 """.formatted(
-                String.join(", ", matchedSkills),
-                String.join(", ", missingSkills)
+                matchedRole,
+                matchPercentage,
+                matchedText,
+                missingText,
+                applicationAdvice,
+                interviewFocus
         );
+    }
 
-        return ollamaService.generateJobInsight(prompt, fallback);
+
+    private String createBulletList(
+            List<String> skills) {
+
+        StringBuilder result =
+                new StringBuilder();
+
+        for (String skill : skills) {
+
+            if (skill != null &&
+                    !skill.trim().isEmpty()) {
+
+                result.append("- ")
+                        .append(skill.trim())
+                        .append("\n");
+            }
+        }
+
+        return result.toString().trim();
+    }
+
+
+    private boolean isValidAIResponse(
+            String response,
+            List<String> matchedSkills,
+            List<String> missingSkills) {
+
+        if (response == null ||
+                response.trim().isEmpty()) {
+
+            return false;
+        }
+
+
+        String lowerResponse =
+                response.toLowerCase(Locale.ROOT);
+
+
+        /*
+         * Required sections.
+         */
+
+        String[] requiredSections = {
+
+                "why this job:",
+                "skills you already have:",
+                "skills to improve:",
+                "application advice:",
+                "interview focus:"
+
+        };
+
+
+        for (String section : requiredSections) {
+
+            if (!lowerResponse.contains(section)) {
+
+                return false;
+            }
+        }
+
+
+        /*
+         * Reject model-generated extra sections.
+         */
+
+        String[] forbiddenHeadings = {
+
+                "important rules:",
+                "final rules:",
+                "explanation of the calculated career match:",
+                "slot 1:",
+                "slot 2:",
+                "slot 3:",
+                "slot 4:",
+                "slot 5:"
+
+        };
+
+
+        for (String heading : forbiddenHeadings) {
+
+            if (lowerResponse.contains(heading)) {
+
+                return false;
+            }
+        }
+
+
+        /*
+         * Reject unsupported technologies/topics.
+         *
+         * They are allowed only when they actually appear in the
+         * deterministic matched/missing skill lists.
+         */
+
+        StringBuilder allowedSkills =
+                new StringBuilder();
+
+        if (matchedSkills != null) {
+
+            for (String skill : matchedSkills) {
+
+                if (skill != null) {
+
+                    allowedSkills
+                            .append(" ")
+                            .append(
+                                    skill.toLowerCase(
+                                            Locale.ROOT
+                                    )
+                            )
+                            .append(" ");
+
+                }
+            }
+        }
+
+
+        if (missingSkills != null) {
+
+            for (String skill : missingSkills) {
+
+                if (skill != null) {
+
+                    allowedSkills
+                            .append(" ")
+                            .append(
+                                    skill.toLowerCase(
+                                            Locale.ROOT
+                                    )
+                            )
+                            .append(" ");
+
+                }
+            }
+        }
+
+
+        String[] restrictedTerms = {
+
+                "react",
+                "react native",
+                "javascript",
+                "typescript",
+                "python",
+                "node.js",
+                "nodejs",
+                "mongodb",
+                "docker",
+                "aws",
+                "azure",
+                "google cloud",
+                "gcp",
+                "kubernetes",
+                "spring cloud",
+                "spring security",
+                "microservices",
+                "html",
+                "css",
+                "git",
+                "github",
+                "jenkins",
+                "kafka",
+                "redis",
+                "angular",
+                "vue",
+                "flutter",
+                "android",
+                "machine learning",
+                "artificial intelligence",
+                "data science",
+                "data analytics",
+                "tensorflow",
+                "pytorch",
+                "maven",
+                "jpa",
+                "spring data",
+                "communication skills",
+                "problem-solving skills",
+                "problem solving skills",
+                "professional experience",
+                "work experience",
+                "certification",
+                "certifications"
+
+        };
+
+
+        for (String term : restrictedTerms) {
+
+            if (lowerResponse.contains(term)) {
+
+                boolean allowed =
+                        allowedSkills
+                                .toString()
+                                .contains(term);
+
+                if (!allowed) {
+
+                    return false;
+                }
+            }
+        }
+
+
+        /*
+         * Reject exaggerated claims.
+         */
+
+        String[] exaggeratedPhrases = {
+
+                "perfect fit",
+                "perfectly suited",
+                "perfect match",
+                "expert in",
+                "highly skilled",
+                "strong experience",
+                "extensive experience",
+                "excellent candidate",
+                "proficient in all"
+
+        };
+
+
+        for (String phrase : exaggeratedPhrases) {
+
+            if (lowerResponse.contains(phrase)) {
+
+                return false;
+            }
+        }
+
+
+        return true;
     }
 }
