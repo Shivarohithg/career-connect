@@ -5,6 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,31 +42,54 @@ public class ResumeController {
 
             String fileName = file.getOriginalFilename();
 
-            Path directory = Paths.get(uploadDirectory);
+            if (fileName == null ||
+                    !fileName.toLowerCase().endsWith(".pdf")) {
 
+                return ResponseEntity
+                        .badRequest()
+                        .body("Only PDF resumes are supported.");
+            }
+
+            Path directory = Paths.get(uploadDirectory);
             Files.createDirectories(directory);
 
             Path filePath = directory.resolve(fileName);
 
             Files.write(filePath, file.getBytes());
 
-            // Save uploaded resume path in StudentProfile
+            String resumeText;
+
+            try (PDDocument document =
+                         Loader.loadPDF(file.getBytes())) {
+
+                PDFTextStripper stripper =
+                        new PDFTextStripper();
+
+                resumeText = stripper.getText(document).trim();
+            }
+
+            if (resumeText.isEmpty()) {
+                return ResponseEntity
+                        .badRequest()
+                        .body("Could not extract text from the resume.");
+            }
+
             StudentProfile profile =
-                    studentProfileService.updateResumePath(
+                    studentProfileService.updateResume(
                             studentId,
-                            filePath.toString()
+                            filePath.toString(),
+                            resumeText
                     );
 
             return ResponseEntity.ok(
-                    "Resume uploaded successfully: "
-                            + profile.getResumePath()
+                    "Resume uploaded and text extracted successfully."
             );
 
         } catch (IOException e) {
 
             return ResponseEntity
                     .internalServerError()
-                    .body("Failed to upload resume.");
+                    .body("Failed to upload or read the resume.");
 
         } catch (RuntimeException e) {
 

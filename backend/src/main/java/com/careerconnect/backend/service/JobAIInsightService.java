@@ -28,7 +28,6 @@ public class JobAIInsightService {
     @Autowired
     private OllamaService ollamaService;
 
-
     public String generateJobInsight(
             int studentId,
             int jobId,
@@ -50,7 +49,6 @@ public class JobAIInsightService {
                 .orElseThrow(() ->
                         new RuntimeException("Job not found"));
 
-
         String matchedSkillsText =
                 matchedSkills == null || matchedSkills.isEmpty()
                         ? "None"
@@ -60,12 +58,6 @@ public class JobAIInsightService {
                 missingSkills == null || missingSkills.isEmpty()
                         ? "None"
                         : String.join(", ", missingSkills);
-
-
-        /*
-         * Ollama is used only as a natural-language explanation layer.
-         * CareerConnect remains responsible for the actual facts.
-         */
 
         String prompt = """
                 You are an explanation assistant for CareerConnect.
@@ -95,16 +87,23 @@ public class JobAIInsightService {
 
                 Your response must contain exactly these headings:
 
+                AI APPLICATION DECISION:
                 WHY THIS JOB:
                 SKILLS YOU ALREADY HAVE:
                 SKILLS TO IMPROVE:
                 APPLICATION ADVICE:
                 INTERVIEW FOCUS:
 
+                For AI APPLICATION DECISION:
+                - Start with either "RECOMMEND APPLYING" or
+                  "APPLY AFTER IMPROVING SKILLS".
+                - Explain the decision using only the match percentage,
+                  matched skills and missing skills.
+                - Do not invent job requirements.
+
                 Rules:
 
-                Only mention skills from MATCHED SKILLS or
-                MISSING SKILLS.
+                Only mention skills from MATCHED SKILLS or MISSING SKILLS.
 
                 Do not mention any other technology.
 
@@ -124,12 +123,6 @@ public class JobAIInsightService {
 
                 Keep every section very short.
 
-                If MATCHED SKILLS contains Java and Spring Boot,
-                you may discuss Java and Spring Boot.
-
-                If MISSING SKILLS contains SQL,
-                you may discuss SQL.
-
                 Do not introduce React, Python, JavaScript, Docker,
                 AWS, Azure, Git, Maven, JPA, Spring Data, DSA,
                 communication skills, problem-solving skills, or any
@@ -145,7 +138,6 @@ public class JobAIInsightService {
                 job.getLocation()
         );
 
-
         String fallback = createDeterministicFallback(
                 matchedRole,
                 matchPercentage,
@@ -153,23 +145,11 @@ public class JobAIInsightService {
                 missingSkills
         );
 
-
         String aiResponse =
                 ollamaService.generateJobInsight(
                         prompt,
                         fallback
                 );
-
-
-        /*
-         * Validate the response before showing it to the user.
-         *
-         * Because qwen2.5:0.5b is a very small model, it can sometimes
-         * ignore instructions and invent additional information.
-         *
-         * If that happens, CareerConnect safely uses the deterministic
-         * fallback instead.
-         */
 
         if (!isValidAIResponse(
                 aiResponse,
@@ -188,10 +168,8 @@ public class JobAIInsightService {
             return fallback;
         }
 
-
         return aiResponse;
     }
-
 
     private String createDeterministicFallback(
             String matchedRole,
@@ -209,6 +187,32 @@ public class JobAIInsightService {
                         ? "- No major skill gaps identified."
                         : createBulletList(missingSkills);
 
+        String applicationDecision;
+
+        if (matchPercentage >= 70 && 
+                (missingSkills == null || missingSkills.isEmpty())) {
+
+            applicationDecision =
+                    "RECOMMEND APPLYING - Your current skills cover "
+                    + "the identified requirements for this role.";
+
+        } else if (matchPercentage >= 60) {
+
+            applicationDecision =
+                    "RECOMMEND APPLYING - Your current match is "
+                    + matchPercentage
+                    + "%. You have relevant matched skills, while "
+                    + "the remaining gaps can be improved.";
+
+        } else {
+
+            applicationDecision =
+                    "APPLY AFTER IMPROVING SKILLS - Your current match "
+                    + "is "
+                    + matchPercentage
+                    + "%. Focus on the identified missing skills before "
+                    + "prioritizing this role.";
+        }
 
         String applicationAdvice;
 
@@ -225,9 +229,7 @@ public class JobAIInsightService {
             applicationAdvice =
                     "Focus on improving the identified missing skills "
                     + "while continuing to strengthen your matched skills.";
-
         }
-
 
         String interviewFocus;
 
@@ -248,11 +250,12 @@ public class JobAIInsightService {
             interviewFocus =
                     "Revise the matched skills and prepare the identified "
                     + "skill gaps for the interview.";
-
         }
 
-
         return """
+                AI APPLICATION DECISION:
+                %s
+
                 WHY THIS JOB:
                 The %s role matches your calculated career direction.
                 Your current calculated match is %d%% based on the identified skills.
@@ -269,6 +272,7 @@ public class JobAIInsightService {
                 INTERVIEW FOCUS:
                 %s
                 """.formatted(
+                applicationDecision,
                 matchedRole,
                 matchPercentage,
                 matchedText,
@@ -277,7 +281,6 @@ public class JobAIInsightService {
                 interviewFocus
         );
     }
-
 
     private String createBulletList(
             List<String> skills) {
@@ -299,7 +302,6 @@ public class JobAIInsightService {
         return result.toString().trim();
     }
 
-
     private boolean isValidAIResponse(
             String response,
             List<String> matchedSkills,
@@ -311,25 +313,17 @@ public class JobAIInsightService {
             return false;
         }
 
-
         String lowerResponse =
                 response.toLowerCase(Locale.ROOT);
 
-
-        /*
-         * Required sections.
-         */
-
         String[] requiredSections = {
-
+                "ai application decision:",
                 "why this job:",
                 "skills you already have:",
                 "skills to improve:",
                 "application advice:",
                 "interview focus:"
-
         };
-
 
         for (String section : requiredSections) {
 
@@ -339,13 +333,7 @@ public class JobAIInsightService {
             }
         }
 
-
-        /*
-         * Reject model-generated extra sections.
-         */
-
         String[] forbiddenHeadings = {
-
                 "important rules:",
                 "final rules:",
                 "explanation of the calculated career match:",
@@ -354,9 +342,7 @@ public class JobAIInsightService {
                 "slot 3:",
                 "slot 4:",
                 "slot 5:"
-
         };
-
 
         for (String heading : forbiddenHeadings) {
 
@@ -365,14 +351,6 @@ public class JobAIInsightService {
                 return false;
             }
         }
-
-
-        /*
-         * Reject unsupported technologies/topics.
-         *
-         * They are allowed only when they actually appear in the
-         * deterministic matched/missing skill lists.
-         */
 
         StringBuilder allowedSkills =
                 new StringBuilder();
@@ -391,11 +369,9 @@ public class JobAIInsightService {
                                     )
                             )
                             .append(" ");
-
                 }
             }
         }
-
 
         if (missingSkills != null) {
 
@@ -411,14 +387,11 @@ public class JobAIInsightService {
                                     )
                             )
                             .append(" ");
-
                 }
             }
         }
 
-
         String[] restrictedTerms = {
-
                 "react",
                 "react native",
                 "javascript",
@@ -463,9 +436,7 @@ public class JobAIInsightService {
                 "work experience",
                 "certification",
                 "certifications"
-
         };
-
 
         for (String term : restrictedTerms) {
 
@@ -483,13 +454,7 @@ public class JobAIInsightService {
             }
         }
 
-
-        /*
-         * Reject exaggerated claims.
-         */
-
         String[] exaggeratedPhrases = {
-
                 "perfect fit",
                 "perfectly suited",
                 "perfect match",
@@ -499,9 +464,7 @@ public class JobAIInsightService {
                 "extensive experience",
                 "excellent candidate",
                 "proficient in all"
-
         };
-
 
         for (String phrase : exaggeratedPhrases) {
 
@@ -510,7 +473,6 @@ public class JobAIInsightService {
                 return false;
             }
         }
-
 
         return true;
     }

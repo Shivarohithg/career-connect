@@ -1,5 +1,6 @@
 package com.careerconnect.backend.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,8 +33,12 @@ public class StudentProfile {
 
     private String resumePath;
 
-    public StudentProfile() {
+    @Column(columnDefinition = "TEXT")
+    private String resumeText;
 
+    private String resumeSkills;
+
+    public StudentProfile() {
     }
 
     public StudentProfile(
@@ -86,6 +91,14 @@ public class StudentProfile {
         return resumePath;
     }
 
+    public String getResumeText() {
+        return resumeText;
+    }
+
+    public String getResumeSkills() {
+        return resumeSkills;
+    }
+
     public void setStudent(Student student) {
         this.student = student;
     }
@@ -112,5 +125,13 @@ public class StudentProfile {
 
     public void setResumePath(String resumePath) {
         this.resumePath = resumePath;
+    }
+
+    public void setResumeText(String resumeText) {
+        this.resumeText = resumeText;
+    }
+
+    public void setResumeSkills(String resumeSkills) {
+        this.resumeSkills = resumeSkills;
     }
 }

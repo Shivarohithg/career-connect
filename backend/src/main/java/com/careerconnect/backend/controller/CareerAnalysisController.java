@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.careerconnect.backend.model.CareerAnalysis;
+import com.careerconnect.backend.model.Student;
 import com.careerconnect.backend.service.CareerAnalysisService;
 
 @RestController
@@ -26,7 +27,9 @@ public class CareerAnalysisController {
             CareerAnalysis analysis =
                     careerAnalysisService.getAnalysis(studentId);
 
-            return ResponseEntity.ok(analysis);
+            return ResponseEntity.ok(
+                    createSafeResponse(analysis)
+            );
 
         } catch (RuntimeException e) {
 
@@ -47,7 +50,7 @@ public class CareerAnalysisController {
 
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(analysis);
+                    .body(createSafeResponse(analysis));
 
         } catch (RuntimeException e) {
 
@@ -55,5 +58,46 @@ public class CareerAnalysisController {
                     .status(HttpStatus.CONFLICT)
                     .body(e.getMessage());
         }
+    }
+
+    private CareerAnalysisResponse createSafeResponse(
+            CareerAnalysis analysis) {
+
+        Student student = analysis.getStudent();
+
+        StudentResponse studentResponse =
+                new StudentResponse(
+                        student.getId(),
+                        student.getName(),
+                        student.getBranch(),
+                        student.getCgpa(),
+                        student.getEmail()
+                );
+
+        return new CareerAnalysisResponse(
+                studentResponse,
+                analysis.getRecommendedRoles(),
+                analysis.getRecommendedSkills(),
+                analysis.getSkillGaps(),
+                analysis.getId()
+        );
+    }
+
+    private record StudentResponse(
+            int id,
+            String name,
+            String branch,
+            double cgpa,
+            String email
+    ) {
+    }
+
+    private record CareerAnalysisResponse(
+            StudentResponse student,
+            String recommendedRoles,
+            String recommendedSkills,
+            String skillGaps,
+            int id
+    ) {
     }
 }

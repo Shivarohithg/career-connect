@@ -57,50 +57,71 @@ public class StudentProfileService {
         profile.setResumePath(resumePath);
 
         return studentProfileRepository.save(profile);
-}
-
-        public StudentProfile updateProfile(
-        int studentId,
-        String skills,
-        String projects,
-        String githubUsername,
-        String leetcodeUsername,
-        String hackerrankUsername,
-        String resumePath) {
-
-    Student student = studentRepository.findById(studentId)
-            .orElseThrow(() ->
-                    new RuntimeException("Student not found"));
-
-    StudentProfile profile =
-            studentProfileRepository.findByStudent(student)
-                    .orElseThrow(() ->
-                            new RuntimeException("Profile not found"));
-
-    profile.setSkills(skills);
-    profile.setProjects(projects);
-    profile.setGithubUsername(githubUsername);
-    profile.setLeetcodeUsername(leetcodeUsername);
-    profile.setHackerrankUsername(hackerrankUsername);
-    profile.setResumePath(resumePath);
-
-    return studentProfileRepository.save(profile);
-}
-public StudentProfile updateResumePath(
-        int studentId,
-        String resumePath) {
-
-    Student student = studentRepository.findById(studentId)
-            .orElseThrow(() ->
-                    new RuntimeException("Student not found"));
-
-    StudentProfile profile =
-            studentProfileRepository.findByStudent(student)
-                    .orElseThrow(() ->
-                            new RuntimeException("Profile not found"));
-
-    profile.setResumePath(resumePath);
-
-    return studentProfileRepository.save(profile);
-}
     }
+
+    public StudentProfile updateProfile(
+            int studentId,
+            String skills,
+            String projects,
+            String githubUsername,
+            String leetcodeUsername,
+            String hackerrankUsername,
+            String resumePath) {
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Student not found"));
+
+        StudentProfile profile =
+                studentProfileRepository.findByStudent(student)
+                        .orElseThrow(() ->
+                                new RuntimeException("Profile not found"));
+
+        profile.setSkills(skills);
+        profile.setProjects(projects);
+        profile.setGithubUsername(githubUsername);
+        profile.setLeetcodeUsername(leetcodeUsername);
+        profile.setHackerrankUsername(hackerrankUsername);
+        profile.setResumePath(resumePath);
+
+        return studentProfileRepository.save(profile);
+    }
+
+    public StudentProfile updateResumePath(
+            int studentId,
+            String resumePath) {
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Student not found"));
+
+        StudentProfile profile =
+                studentProfileRepository.findByStudent(student)
+                        .orElseThrow(() ->
+                                new RuntimeException("Profile not found"));
+
+        profile.setResumePath(resumePath);
+
+        return studentProfileRepository.save(profile);
+    }
+
+    public StudentProfile updateResume(
+            int studentId,
+            String resumePath,
+            String resumeText) {
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Student not found"));
+
+        StudentProfile profile =
+                studentProfileRepository.findByStudent(student)
+                        .orElseThrow(() ->
+                                new RuntimeException("Profile not found"));
+
+        profile.setResumePath(resumePath);
+        profile.setResumeText(resumeText);
+
+        return studentProfileRepository.save(profile);
+    }
+}
