@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.careerconnect.backend.model.StudentProfile;
+import com.careerconnect.backend.service.ResumeSkillExtractionService;
 import com.careerconnect.backend.service.StudentProfileService;
 
 @RestController
@@ -27,6 +28,9 @@ public class ResumeController {
     @Autowired
     private StudentProfileService studentProfileService;
 
+    @Autowired
+    private ResumeSkillExtractionService resumeSkillExtractionService;
+
     @PostMapping("/student-profiles/{studentId}/resume")
     public ResponseEntity<String> uploadResume(
             @PathVariable int studentId,
@@ -35,8 +39,7 @@ public class ResumeController {
         try {
 
             if (file.isEmpty()) {
-                return ResponseEntity
-                        .badRequest()
+                return ResponseEntity.badRequest()
                         .body("Please select a resume file.");
             }
 
@@ -45,17 +48,22 @@ public class ResumeController {
             if (fileName == null ||
                     !fileName.toLowerCase().endsWith(".pdf")) {
 
-                return ResponseEntity
-                        .badRequest()
+                return ResponseEntity.badRequest()
                         .body("Only PDF resumes are supported.");
             }
 
-            Path directory = Paths.get(uploadDirectory);
+            Path directory =
+                    Paths.get(uploadDirectory);
+
             Files.createDirectories(directory);
 
-            Path filePath = directory.resolve(fileName);
+            Path filePath =
+                    directory.resolve(fileName);
 
-            Files.write(filePath, file.getBytes());
+            Files.write(
+                    filePath,
+                    file.getBytes()
+            );
 
             String resumeText;
 
@@ -65,31 +73,51 @@ public class ResumeController {
                 PDFTextStripper stripper =
                         new PDFTextStripper();
 
-                resumeText = stripper.getText(document).trim();
+                resumeText =
+                        stripper.getText(document).trim();
             }
 
             if (resumeText.isEmpty()) {
-                return ResponseEntity
-                        .badRequest()
-                        .body("Could not extract text from the resume.");
+
+                return ResponseEntity.badRequest()
+                        .body(
+                            "Could not extract text from the resume."
+                        );
             }
 
+            studentProfileService.updateResume(
+                    studentId,
+                    filePath.toString(),
+                    resumeText
+            );
+
             StudentProfile profile =
-                    studentProfileService.updateResume(
-                            studentId,
-                            filePath.toString(),
-                            resumeText
-                    );
+                    resumeSkillExtractionService
+                            .extractAndSaveSkills(studentId);
+
+            String skills =
+                    profile.getResumeSkills();
+
+            if (skills == null ||
+                    skills.trim().isEmpty()) {
+
+                return ResponseEntity.ok(
+                        "Resume uploaded successfully, but no known technical skills were detected."
+                );
+            }
 
             return ResponseEntity.ok(
-                    "Resume uploaded and text extracted successfully."
+                    "Resume uploaded successfully. Detected skills: "
+                            + skills
             );
 
         } catch (IOException e) {
 
             return ResponseEntity
                     .internalServerError()
-                    .body("Failed to upload or read the resume.");
+                    .body(
+                        "Failed to upload or read the resume."
+                    );
 
         } catch (RuntimeException e) {
 

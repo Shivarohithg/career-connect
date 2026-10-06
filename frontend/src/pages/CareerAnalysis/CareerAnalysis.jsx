@@ -4,561 +4,706 @@ import "./CareerAnalysis.css";
 
 function CareerAnalysis() {
 
-  const [analysis, setAnalysis] = useState(null);
-  const [careerAdvice, setCareerAdvice] = useState("");
+    const [analysis, setAnalysis] = useState(null);
+    const [careerAdvice, setCareerAdvice] = useState("");
+    const [resumeAI, setResumeAI] = useState("");
 
-  const [loading, setLoading] = useState(true);
-  const [adviceLoading, setAdviceLoading] = useState(true);
-  const [error, setError] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [adviceLoading, setAdviceLoading] = useState(true);
+    const [resumeLoading, setResumeLoading] = useState(true);
+    const [error, setError] = useState("");
 
-  useEffect(() => {
+    useEffect(() => {
 
-    const loadAnalysis = async () => {
+        const loadAnalysis = async () => {
 
-      try {
+            try {
 
-        const storedStudent = localStorage.getItem("student");
+                const storedStudent =
+                    localStorage.getItem("student");
 
-        if (!storedStudent) {
-          window.location.href = "/login";
-          return;
-        }
+                if (!storedStudent) {
+                    window.location.href = "/login";
+                    return;
+                }
 
-        const student = JSON.parse(storedStudent);
-        const studentId = student.id;
+                const student =
+                    JSON.parse(storedStudent);
 
-        const analysisResponse = await axios.get(
-          `http://localhost:8080/career-analysis/${studentId}`
+                const studentId = student.id;
+
+                const analysisResponse =
+                    await axios.get(
+                        `http://localhost:8080/career-analysis/${studentId}`
+                    );
+
+                setAnalysis(analysisResponse.data);
+
+                try {
+
+                    const adviceResponse =
+                        await axios.get(
+                            `http://localhost:8080/career-recommendation/${studentId}`
+                        );
+
+                    setCareerAdvice(adviceResponse.data);
+
+                } catch (error) {
+
+                    console.error(
+                        "Career advice error:",
+                        error
+                    );
+
+                } finally {
+
+                    setAdviceLoading(false);
+
+                }
+
+                try {
+
+                    const resumeResponse =
+                        await axios.get(
+                            `http://localhost:8080/ai/resume-analysis/${studentId}`
+                        );
+
+                    setResumeAI(resumeResponse.data);
+
+                } catch (error) {
+
+                    console.error(
+                        "Resume AI analysis error:",
+                        error
+                    );
+
+                    setResumeAI(
+                        "Resume AI analysis is unavailable. Please make sure a PDF resume has been uploaded."
+                    );
+
+                } finally {
+
+                    setResumeLoading(false);
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Error loading career analysis:",
+                    error
+                );
+
+                setError(
+                    error.response?.data ||
+                    "Unable to load career analysis."
+                );
+
+                setAdviceLoading(false);
+                setResumeLoading(false);
+
+            } finally {
+
+                setLoading(false);
+
+            }
+        };
+
+        loadAnalysis();
+
+    }, []);
+
+    if (loading) {
+
+        return (
+            <div className="career-analysis-page">
+                <h2>Loading career analysis...</h2>
+            </div>
         );
 
-        setAnalysis(analysisResponse.data);
-
-        const adviceResponse = await axios.get(
-          `http://localhost:8080/career-recommendation/${studentId}`
-        );
-
-        setCareerAdvice(adviceResponse.data);
-
-      } catch (error) {
-
-        console.error("Error loading career analysis:", error);
-
-        setError(
-          typeof error.response?.data === "string"
-            ? error.response.data
-            : "Unable to load career analysis."
-        );
-
-      } finally {
-
-        setLoading(false);
-        setAdviceLoading(false);
-
-      }
-    };
-
-    loadAnalysis();
-
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="career-analysis-page">
-        <h2>Loading career analysis...</h2>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="career-analysis-page">
-        <h2>{error}</h2>
-      </div>
-    );
-  }
-
-  if (!analysis) {
-    return (
-      <div className="career-analysis-page">
-        <h2>Career analysis not found.</h2>
-      </div>
-    );
-  }
-
-  const roles = analysis.recommendedRoles
-    ? analysis.recommendedRoles
-        .split(",")
-        .map(role => role.trim())
-        .filter(Boolean)
-    : [];
-
-  const skills = analysis.recommendedSkills
-    ? analysis.recommendedSkills
-        .split(",")
-        .map(skill => skill.trim())
-        .filter(Boolean)
-    : [];
-
-  const skillGaps = analysis.skillGaps
-    ? analysis.skillGaps
-        .split(",")
-        .map(gap => gap.trim())
-        .filter(Boolean)
-    : [];
-
-  const getPercentage = (role) => {
-
-    const percentageMatch = role.match(/(\d+)%/);
-
-    return percentageMatch
-      ? parseInt(percentageMatch[1])
-      : 0;
-  };
-
-  const getRoleName = (role) => {
-
-    return role
-      .replace(/\s*\(\d+%\s*Match\)/i, "")
-      .trim();
-  };
-
-  /*
-   * Extract a section from Ollama's response.
-   */
-  const getAISection = (start, ends = []) => {
-
-    const text = careerAdvice || "";
-
-    const startIndex = text.toLowerCase().indexOf(
-      start.toLowerCase()
-    );
-
-    if (startIndex === -1) {
-      return "";
     }
 
-    let content = text.substring(
-      startIndex + start.length
-    );
-
-    let endIndex = content.length;
-
-    ends.forEach(end => {
-
-      const index = content
-        .toLowerCase()
-        .indexOf(end.toLowerCase());
-
-      if (index !== -1 && index < endIndex) {
-        endIndex = index;
-      }
-    });
-
-    return content
-      .substring(0, endIndex)
-      .replace(/^[\s:*]+/, "")
-      .trim();
-  };
-
-  const careerInsights = getAISection(
-    "CAREER INSIGHTS",
-    [
-      "WHY THIS ROLE",
-      "CURRENT STRENGTHS"
-    ]
-  );
-
-  const whyRole = getAISection(
-    "WHY THIS ROLE",
-    [
-      "CURRENT STRENGTHS",
-      "SKILLS TO IMPROVE"
-    ]
-  );
-
-  const aiRoadmap = getAISection(
-    "LEARNING ROADMAP",
-    [
-      "PROJECT RECOMMENDATION",
-      "INTERVIEW PREPARATION",
-      "NEXT ACTION"
-    ]
-  );
-
-  const projectRecommendation = getAISection(
-    "PROJECT RECOMMENDATION",
-    [
-      "INTERVIEW PREPARATION",
-      "NEXT ACTION",
-      "IMPORTANT RULES"
-    ]
-  );
-
-  const interviewPreparation = getAISection(
-    "INTERVIEW PREPARATION",
-    [
-      "NEXT ACTION",
-      "IMPORTANT RULES"
-    ]
-  );
-
-  /*
-   * Stop NEXT ACTION from accidentally including
-   * Project Recommendation.
-   */
-  const nextAction = getAISection(
-    "NEXT ACTION",
-    [
-      "PROJECT RECOMMENDATION",
-      "INTERVIEW PREPARATION",
-      "IMPORTANT RULES"
-    ]
-  );
-
-  const readinessMatch = careerAdvice.match(
-    /Career Readiness Score:\s*(\d+)%/i
-  );
-
-  const readinessScore = readinessMatch
-    ? readinessMatch[1]
-    : "0";
-
-  /*
-   * Convert AI roadmap into individual steps.
-   */
-  const roadmapSteps = aiRoadmap
-    ? aiRoadmap
-        .split(/(?=Step\s*\d+|\d+\s*[-—:.])/i)
-        .map(step => step.trim())
-        .filter(Boolean)
-    : [];
-
-  return (
-
-    <div className="career-analysis-page">
-
-      {/* HEADER */}
-
-      <div className="career-analysis-header">
-
-        <h1>AI Career Analysis</h1>
-
-        <p>
-          Discover suitable career roles,
-          recommended skills, and areas
-          for improvement.
-        </p>
-
-      </div>
-
-
-      {/* AI CAREER INSIGHTS */}
-
-      <div className="analysis-card ai-career-card">
-
-        <h2>🤖 AI Career Insights</h2>
-
-        {adviceLoading ? (
-
-          <p>
-            Generating personalized career insights...
-          </p>
-
-        ) : (
-
-          <div className="ai-advice">
-
-            {careerInsights ? (
-              <p>{careerInsights}</p>
-            ) : (
-              <p>
-                Your profile has been analyzed
-                based on your current skills,
-                career roles, and skill gaps.
-              </p>
-            )}
-
-          </div>
-
-        )}
-
-      </div>
-
-
-      {/* CAREER READINESS */}
-
-      <div className="analysis-card career-score-card">
-
-        <h2>📊 Career Readiness</h2>
-
-        <div className="career-score">
-
-          <div className="score-number">
-            {readinessScore}%
-          </div>
-
-          <div className="score-text">
-
-            <strong>
-              Current Readiness
-            </strong>
-
-            <p>
-              Based on your current skills
-              and identified skill gaps.
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* RECOMMENDED ROLES */}
-
-      <div className="analysis-card">
-
-        <h2>🎯 Recommended Roles</h2>
-
-        <div className="role-list">
-
-          {roles.map((role, index) => {
-
-            const percentage =
-              getPercentage(role);
-
-            const roleName =
-              getRoleName(role);
-
-            return (
-
-              <div
-                className="role-match"
-                key={index}
-              >
-
-                <div className="role-match-header">
-
-                  <span className="role-name">
-                    {roleName}
-                  </span>
-
-                  <span className="match-percentage">
-                    {percentage}% Match
-                  </span>
-
-                </div>
-
-                <div className="progress-bar">
-
-                  <div
-                    className="progress-fill"
-                    style={{
-                      width: `${percentage}%`
-                    }}
-                  />
-
-                </div>
-
-              </div>
-
+    if (error) {
+
+        return (
+            <div className="career-analysis-page">
+                <h2>{error}</h2>
+            </div>
+        );
+
+    }
+
+    if (!analysis) {
+
+        return (
+            <div className="career-analysis-page">
+                <h2>Career analysis not found.</h2>
+            </div>
+        );
+
+    }
+
+    const roles = analysis.recommendedRoles
+        ? analysis.recommendedRoles
+            .split(",")
+            .map(role => role.trim())
+        : [];
+
+    const skills = analysis.recommendedSkills
+        ? analysis.recommendedSkills
+            .split(",")
+            .map(skill => skill.trim())
+        : [];
+
+    const skillGaps = analysis.skillGaps
+        ? analysis.skillGaps
+            .split(",")
+            .map(gap => gap.trim())
+        : [];
+
+    const getPercentage = (role) => {
+
+        const percentageMatch =
+            role.match(/(\d+)%/);
+
+        if (percentageMatch) {
+            return parseInt(
+                percentageMatch[1]
             );
+        }
 
-          })}
+        return 0;
+    };
 
-        </div>
+    const getRoleName = (role) => {
 
-      </div>
+        return role
+            .replace(
+                /\s*\(\d+%\s*Match\)/i,
+                ""
+            )
+            .trim();
+    };
 
+    const parseResumeAI = () => {
 
-      {/* RECOMMENDED SKILLS */}
+        if (!resumeAI) {
+            return [];
+        }
 
-      <div className="analysis-card">
+        const headings = [
+            "RESUME SUMMARY",
+            "TECHNICAL STRENGTHS",
+            "CAREER DIRECTION",
+            "AREAS TO IMPROVE",
+            "RECOMMENDED NEXT STEPS"
+        ];
 
-        <h2>💡 Recommended Skills</h2>
+        const sections = [];
 
-        <div className="analysis-list">
+        let currentTitle = "";
+        let currentContent = [];
 
-          {skills.map((skill, index) => (
+        const lines =
+            resumeAI
+                .replace(/\r/g, "")
+                .split("\n");
 
-            <div
-              className="analysis-item"
-              key={index}
-            >
-              ✓ {skill}
+        const flushSection = () => {
+
+            if (
+                currentTitle &&
+                currentContent.join("\n").trim()
+            ) {
+
+                sections.push({
+                    title: currentTitle,
+                    content:
+                        currentContent
+                            .join("\n")
+                            .trim()
+                });
+
+            }
+
+            currentContent = [];
+
+        };
+
+        lines.forEach(line => {
+
+            const cleanLine =
+                line
+                    .replace(/^#+\s*/, "")
+                    .replace(/\*\*/g, "")
+                    .trim();
+
+            const matchedHeading =
+                headings.find(
+                    heading =>
+                        cleanLine
+                            .toUpperCase()
+                            .startsWith(heading)
+                );
+
+            if (matchedHeading) {
+
+                flushSection();
+                currentTitle =
+                    matchedHeading;
+
+                const remaining =
+                    cleanLine
+                        .substring(
+                            matchedHeading.length
+                        )
+                        .replace(/^:\s*/, "")
+                        .trim();
+
+                if (remaining) {
+                    currentContent.push(
+                        remaining
+                    );
+                }
+
+            } else if (currentTitle) {
+
+                currentContent.push(cleanLine);
+
+            }
+
+        });
+
+        flushSection();
+
+        return sections;
+    };
+
+    const resumeSections =
+        parseResumeAI();
+
+    const resumeSectionStyle = {
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: "14px",
+        padding: "20px",
+        marginBottom: "16px"
+    };
+
+    const resumeTitleStyle = {
+        marginTop: 0,
+        marginBottom: "12px",
+        fontSize: "18px"
+    };
+
+    const resumeTextStyle = {
+        margin: 0,
+        lineHeight: "1.7",
+        whiteSpace: "pre-line"
+    };
+
+    return (
+
+        <div className="career-analysis-page">
+
+            {/* Header */}
+
+            <div className="career-analysis-header">
+
+                <h1>AI Career Analysis</h1>
+
+                <p>
+                    Discover suitable career roles,
+                    recommended skills, and areas
+                    for improvement.
+                </p>
+
             </div>
 
-          ))}
 
-        </div>
+            {/* ================================================= */}
+            {/* RESUME INTELLIGENCE */}
+            {/* ================================================= */}
 
-      </div>
+            <div className="analysis-card">
+
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "15px",
+                        flexWrap: "wrap"
+                    }}
+                >
+
+                    <div>
+
+                        <h2 style={{ marginBottom: "6px" }}>
+                            📄 AI Resume Intelligence
+                        </h2>
+
+                        <p style={{ marginTop: 0 }}>
+                            AI analysis of your uploaded resume,
+                            skills, projects, and career direction.
+                        </p>
+
+                    </div>
+
+                    <span
+                        style={{
+                            padding: "7px 12px",
+                            borderRadius: "20px",
+                            background: "rgba(99,102,241,0.15)",
+                            fontSize: "13px"
+                        }}
+                    >
+                        Powered by Local AI
+                    </span>
+
+                </div>
 
 
-      {/* SKILL GAPS */}
+                {resumeLoading ? (
 
-      <div className="analysis-card">
+                    <div
+                        style={{
+                            padding: "30px 0",
+                            textAlign: "center"
+                        }}
+                    >
 
-        <h2>📚 Skill Gaps</h2>
+                        <p>
+                            🤖 Analyzing your resume...
+                        </p>
 
-        <div className="analysis-list">
+                        <p style={{ opacity: 0.7 }}>
+                            This may take a few seconds.
+                        </p>
 
-          {skillGaps.map((gap, index) => (
+                    </div>
 
-            <div
-              className="analysis-item skill-gap"
-              key={index}
-            >
-              ⚠ {gap}
+                ) : resumeSections.length > 0 ? (
+
+                    <div style={{ marginTop: "20px" }}>
+
+                        {resumeSections.map(
+                            (section, index) => (
+
+                                <div
+                                    key={index}
+                                    style={
+                                        resumeSectionStyle
+                                    }
+                                >
+
+                                    <h3
+                                        style={
+                                            resumeTitleStyle
+                                        }
+                                    >
+                                        {section.title ===
+                                        "RESUME SUMMARY"
+                                            ? "📝 Resume Summary"
+                                            : section.title ===
+                                              "TECHNICAL STRENGTHS"
+                                            ? "💪 Technical Strengths"
+                                            : section.title ===
+                                              "CAREER DIRECTION"
+                                            ? "🎯 Career Direction"
+                                            : section.title ===
+                                              "AREAS TO IMPROVE"
+                                            ? "📚 Areas to Improve"
+                                            : "🚀 Recommended Next Steps"}
+                                    </h3>
+
+                                    <p
+                                        style={
+                                            resumeTextStyle
+                                        }
+                                    >
+                                        {section.content}
+                                    </p>
+
+                                </div>
+
+                            )
+                        )}
+
+                    </div>
+
+                ) : (
+
+                    <div
+                        style={{
+                            marginTop: "20px",
+                            padding: "20px",
+                            borderRadius: "12px"
+                        }}
+                    >
+
+                        <p>
+                            {resumeAI ||
+                                "Resume analysis is not available."}
+                        </p>
+
+                    </div>
+
+                )}
+
             </div>
 
-          ))}
 
-        </div>
+            {/* ================================================= */}
+            {/* AI CAREER INSIGHTS */}
+            {/* ================================================= */}
 
-      </div>
+            <div className="analysis-card ai-career-card">
+
+                <h2>🤖 AI Career Insights</h2>
+
+                {adviceLoading ? (
+
+                    <p>
+                        Generating personalized
+                        career insights...
+                    </p>
+
+                ) : (
+
+                    <div className="ai-advice">
+
+                        {careerAdvice
+                            .split("\n")
+                            .map((line, index) => (
+
+                                <p key={index}>
+                                    {line}
+                                </p>
+
+                            ))}
+
+                    </div>
+
+                )}
+
+            </div>
 
 
-      {/* WHY THIS ROLE */}
+            {/* ================================================= */}
+            {/* CAREER READINESS */}
+            {/* ================================================= */}
 
-      {whyRole && (
+            <div className="analysis-card career-score-card">
 
-        <div className="analysis-card ai-section-card">
+                <h2>📊 Career Readiness</h2>
 
-          <h2>💡 Why This Role?</h2>
+                <div className="career-score">
 
-          <div className="ai-advice">
+                    <div className="score-number">
 
-            <p>{whyRole}</p>
+                        {
+                            careerAdvice.match(
+                                /Career Readiness Score:\s*(\d+)%/
+                            )?.[1] || 0
+                        }%
 
-          </div>
+                    </div>
 
-        </div>
+                    <div className="score-text">
 
-      )}
+                        <strong>
+                            Current Readiness
+                        </strong>
 
+                        <p>
+                            Based on your current
+                            skills and identified
+                            skill gaps.
+                        </p>
 
-      {/* AI LEARNING ROADMAP */}
+                    </div>
 
-      <div className="analysis-card">
-
-        <h2>🛣️ AI Learning Roadmap</h2>
-
-        <div className="roadmap">
-
-          {roadmapSteps.length > 0 ? (
-
-            roadmapSteps.map((step, index) => (
-
-              <div
-                className="roadmap-step"
-                key={index}
-              >
-
-                <div className="roadmap-number">
-                  {index + 1}
                 </div>
 
-                <div>
+            </div>
 
-                  <h3>
-                    {step
-                      .replace(/^Step\s*\d+\s*[-—:.]?\s*/i, "")
-                      .replace(/^\d+\s*[-—:.]?\s*/, "")
-                      .split("\n")[0]
-                    }
-                  </h3>
 
-                  <p>
-                    {step
-                      .split("\n")
-                      .slice(1)
-                      .join(" ")
-                      .trim() ||
-                      "Follow this step through practical learning and exercises."
-                    }
-                  </p>
+            {/* ================================================= */}
+            {/* RECOMMENDED ROLES */}
+            {/* ================================================= */}
+
+            <div className="analysis-card">
+
+                <h2>🎯 Recommended Roles</h2>
+
+                <div className="role-list">
+
+                    {roles.map((role, index) => {
+
+                        const percentage =
+                            getPercentage(role);
+
+                        const roleName =
+                            getRoleName(role);
+
+                        return (
+
+                            <div
+                                className="role-match"
+                                key={index}
+                            >
+
+                                <div
+                                    className="role-match-header"
+                                >
+
+                                    <span className="role-name">
+                                        {roleName}
+                                    </span>
+
+                                    <span
+                                        className="match-percentage"
+                                    >
+                                        {percentage}% Match
+                                    </span>
+
+                                </div>
+
+                                <div className="progress-bar">
+
+                                    <div
+                                        className="progress-fill"
+                                        style={{
+                                            width:
+                                                `${percentage}%`
+                                        }}
+                                    >
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        );
+
+                    })}
 
                 </div>
 
-              </div>
+            </div>
 
-            ))
 
-          ) : (
+            {/* ================================================= */}
+            {/* RECOMMENDED SKILLS */}
+            {/* ================================================= */}
 
-            <p>
-              AI roadmap could not be generated.
-              Continue improving your identified
-              skill gaps through practical projects.
-            </p>
+            <div className="analysis-card">
 
-          )}
+                <h2>💡 Recommended Skills</h2>
+
+                <div className="analysis-list">
+
+                    {skills.map((skill, index) => (
+
+                        <div
+                            className="analysis-item"
+                            key={index}
+                        >
+                            ✓ {skill}
+                        </div>
+
+                    ))}
+
+                </div>
+
+            </div>
+
+
+            {/* ================================================= */}
+            {/* SKILL GAPS */}
+            {/* ================================================= */}
+
+            <div className="analysis-card">
+
+                <h2>📚 Skill Gaps</h2>
+
+                <div className="analysis-list">
+
+                    {skillGaps.map((gap, index) => (
+
+                        <div
+                            className="analysis-item skill-gap"
+                            key={index}
+                        >
+                            ⚠ {gap}
+                        </div>
+
+                    ))}
+
+                </div>
+
+            </div>
+
+
+            {/* ================================================= */}
+            {/* LEARNING ROADMAP */}
+            {/* ================================================= */}
+
+            <div className="analysis-card">
+
+                <h2>🛣️ Learning Roadmap</h2>
+
+                <div className="roadmap">
+
+                    {skillGaps
+                        .slice(0, 4)
+                        .map((gap, index) => (
+
+                            <div
+                                className="roadmap-step"
+                                key={index}
+                            >
+
+                                <div className="roadmap-number">
+                                    {index + 1}
+                                </div>
+
+                                <div>
+
+                                    <h3>
+                                        Learn {gap}
+                                    </h3>
+
+                                    <p>
+                                        Improve this skill
+                                        to increase your
+                                        career readiness.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        ))}
+
+                    {skillGaps.length === 0 && (
+
+                        <p>
+                            Continue improving your
+                            existing skills through
+                            projects and interview
+                            practice.
+                        </p>
+
+                    )}
+
+                </div>
+
+            </div>
 
         </div>
-
-      </div>
-
-
-      {/* PROJECT RECOMMENDATION */}
-
-      {projectRecommendation && (
-
-        <div className="analysis-card ai-section-card project-ai-card">
-
-          <h2>🚀 Project Recommendation</h2>
-
-          <div className="ai-advice">
-
-            <p>{projectRecommendation}</p>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* INTERVIEW PREPARATION */}
-
-      {interviewPreparation && (
-
-        <div className="analysis-card ai-section-card interview-ai-card">
-
-          <h2>🎤 Interview Preparation</h2>
-
-          <div className="ai-advice">
-
-            <p>{interviewPreparation}</p>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* NEXT ACTION */}
-
-      {nextAction && (
-
-        <div className="analysis-card next-action-card">
-
-          <h2>🚀 Your Next Action</h2>
-
-          <div className="ai-advice">
-
-            <p>{nextAction}</p>
-
-          </div>
-
-        </div>
-
-      )}
-
-    </div>
-  );
+    );
 }
 
 export default CareerAnalysis;
