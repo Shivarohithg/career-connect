@@ -1,7 +1,10 @@
+
 package com.careerconnect.backend.service;
 
+import java.time.Duration;
 import java.util.Map;
 
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -12,15 +15,20 @@ public class OllamaService {
 
     public OllamaService() {
 
+        SimpleClientHttpRequestFactory factory =
+                new SimpleClientHttpRequestFactory();
+
+        factory.setConnectTimeout(Duration.ofSeconds(10));
+        factory.setReadTimeout(Duration.ofSeconds(120));
+
         this.restClient = RestClient.builder()
                 .baseUrl("http://localhost:11434")
+                .requestFactory(factory)
                 .build();
     }
 
     /*
-     * =========================================================
      * CAREER ANALYSIS AI
-     * =========================================================
      */
 
     public String generateCareerAdvice(
@@ -33,105 +41,59 @@ public class OllamaService {
                 You are CareerConnect AI, an intelligent career guidance
                 assistant for college students.
 
-                Analyze the student's career information and provide
-                personalized, practical guidance.
-
-                ==============================
-                STUDENT SKILLS
-                ==============================
+                STUDENT SKILLS:
                 %s
 
-                ==============================
-                RECOMMENDED CAREER ROLES
-                ==============================
+                RECOMMENDED CAREER ROLES:
                 %s
 
-                ==============================
-                IDENTIFIED SKILL GAPS
-                ==============================
+                IDENTIFIED SKILL GAPS:
                 %s
 
-                ==============================
-                SYSTEM ANALYSIS
-                ==============================
+                SYSTEM ANALYSIS:
                 %s
 
-                ==============================
-                YOUR TASK
-                ==============================
+                YOUR TASK:
 
-                Based ONLY on the information provided above, generate
-                personalized career guidance.
-
-                Use exactly this structure:
+                Generate personalized career guidance using exactly
+                these sections:
 
                 CAREER INSIGHTS:
-                Explain the student's current career position and strongest
-                career direction in 2-3 sentences.
+                Explain the student's current career position.
 
                 WHY THIS ROLE:
-                Explain why the top recommended role fits the student's
-                existing skills.
+                Explain why the recommended role fits the student's skills.
 
                 CURRENT STRENGTHS:
-                List the student's strongest existing technical skills.
-                Use one skill per line.
+                List existing technical skills.
 
                 SKILLS TO IMPROVE:
-                List the most important skills the student should improve
-                based on the identified skill gaps.
-                Use one skill per line.
+                List important missing skills.
 
                 LEARNING ROADMAP:
-                Create a personalized 4-step learning roadmap.
-
-                For EACH step provide:
-                Step number and skill/topic
-                Why it should be learned
-                What specific concepts to learn
-                One practical exercise or mini-task
-
-                Follow this progression:
-                Step 1 = highest-priority missing foundation
-                Step 2 = next important technical skill
-                Step 3 = practical application
-                Step 4 = project/interview readiness
-
-                Do NOT simply repeat "Learn <skill>".
-                Make every step actionable and specific.
+                Create a practical 4-step learning roadmap.
+                Each step must include the topic, reason, concepts
+                and one practical exercise.
 
                 PROJECT RECOMMENDATION:
-                Suggest ONE practical project that combines the student's
-                existing skills with the most important missing skill.
-
-                Include:
-                Project idea
-                Main features
-                Technologies to use
-                What the project demonstrates
+                Suggest one practical project with features,
+                technologies and learning outcomes.
 
                 INTERVIEW PREPARATION:
-                List the most important technical areas the student should
-                prepare for the recommended career direction.
+                List important technical areas to prepare.
 
                 NEXT ACTION:
-                Give ONE specific action the student should take next.
+                Give one specific action.
 
-                IMPORTANT RULES:
-                - Use ONLY the information provided.
-                - Do not invent skills the student does not have.
-                - Do not invent work experience.
-                - Do not invent certifications.
-                - Do not invent projects that the student already completed.
-                - Do not change the calculated career match.
-                - Do not create unsupported career roles.
-                - Use the identified skill gaps as the basis for the roadmap.
-                - Do not add unrelated technologies.
-                - Keep the roadmap realistic for a college student.
-                - Prefer specific technical advice over generic motivation.
-                - Make the roadmap progressively harder.
-                - Keep each section concise but useful.
-                - Do not include markdown tables.
+                RULES:
+                - Use only the supplied information.
+                - Do not invent skills or experience.
+                - Do not invent completed projects or certifications.
+                - Do not change calculated career matches.
+                - Keep recommendations realistic for a college student.
+                - Avoid unrelated technologies.
+                - Keep responses concise and actionable.
+                - Do not use markdown tables.
                 """.formatted(
                 studentSkills,
                 recommendedRoles,
@@ -139,60 +101,51 @@ public class OllamaService {
                 baseAnalysis
         );
 
-        try {
-
-            Map<String, Object> requestBody = Map.of(
-                    "model", "qwen2.5:0.5b",
-                    "prompt", prompt,
-                    "stream", false
-            );
-
-            OllamaResponse response =
-                    restClient.post()
-                            .uri("/api/generate")
-                            .body(requestBody)
-                            .retrieve()
-                            .body(OllamaResponse.class);
-
-            if (response == null ||
-                    response.response() == null ||
-                    response.response().trim().isEmpty()) {
-
-                throw new RuntimeException(
-                        "Ollama returned an empty response."
-                );
-            }
-
-            return response.response().trim();
-
-        } catch (Exception e) {
-
-            System.err.println(
-                    "Ollama AI unavailable: "
-                            + e.getMessage()
-            );
-
-            return baseAnalysis;
-        }
+        return generate(
+                prompt,
+                baseAnalysis,
+                700
+        );
     }
 
-
     /*
-     * =========================================================
      * JOB-SPECIFIC AI INSIGHT
-     * =========================================================
      */
 
     public String generateJobInsight(
             String prompt,
             String fallback) {
 
+        return generate(
+                prompt,
+                fallback,
+                350
+        );
+    }
+
+    /*
+     * COMMON OLLAMA GENERATION METHOD
+     */
+
+    private String generate(
+            String prompt,
+            String fallback,
+            int maxTokens) {
+
         try {
+
+            Map<String, Object> options = Map.of(
+                    "temperature", 0.2,
+                    "num_predict", maxTokens,
+                    "num_ctx", 8192
+            );
 
             Map<String, Object> requestBody = Map.of(
                     "model", "qwen2.5:0.5b",
                     "prompt", prompt,
-                    "stream", false
+                    "stream", false,
+                    "keep_alive", "5m",
+                    "options", options
             );
 
             OllamaResponse response =
@@ -216,23 +169,15 @@ public class OllamaService {
         } catch (Exception e) {
 
             System.err.println(
-                    "Ollama Job AI unavailable: "
-                            + e.getMessage()
+                    "Ollama AI unavailable: " + e.getMessage()
             );
 
-            /*
-             * If Ollama is unavailable, return the deterministic
-             * job explanation instead of breaking the application.
-             */
             return fallback;
         }
     }
 
-
     /*
-     * =========================================================
      * OLLAMA RESPONSE
-     * =========================================================
      */
 
     private record OllamaResponse(
@@ -240,3 +185,4 @@ public class OllamaService {
     ) {
     }
 }
+
