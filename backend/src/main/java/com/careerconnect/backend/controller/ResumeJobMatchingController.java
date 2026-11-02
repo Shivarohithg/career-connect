@@ -1,6 +1,7 @@
 
 package com.careerconnect.backend.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -24,12 +25,21 @@ public class ResumeJobMatchingController {
         this.matchingService = matchingService;
     }
 
+    // Day 69: Match resume with one job.
     @GetMapping("/{studentId}/{jobId}")
     public Map<String, Object> getResumeJobMatch(
             @PathVariable int studentId,
             @PathVariable int jobId) {
 
         return matchingService.analyze(studentId, jobId);
+    }
+
+    // Day 70: Match resume with all available jobs.
+    @GetMapping("/all/{studentId}")
+    public List<Map<String, Object>> getAllResumeJobMatches(
+            @PathVariable int studentId) {
+
+        return matchingService.analyzeAll(studentId);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -40,4 +50,5 @@ public class ResumeJobMatchingController {
                 .body(Map.of("error", exception.getMessage()));
     }
 }
+
 
