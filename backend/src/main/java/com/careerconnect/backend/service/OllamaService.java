@@ -112,6 +112,8 @@ public class OllamaService {
      * JOB-SPECIFIC AI INSIGHT
      */
 
+
+
     public String generateJobInsight(
             String prompt,
             String fallback) {
@@ -122,6 +124,21 @@ public class OllamaService {
                 350
         );
     }
+
+        /*
+ * CAREER ROADMAP GENERATION
+ */
+
+public String generateCareerRoadmap(
+        String prompt,
+        String fallback) {
+
+    return generate(
+            prompt,
+            fallback,
+            700
+    );
+}
 
     /*
      * COMMON OLLAMA GENERATION METHOD
