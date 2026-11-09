@@ -85,3 +85,216 @@
     cursor: pointer;
     font-weight: 600;
 }
+
+
+
+/* ================= PASSWORD CONTAINER ================= */
+
+.password-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* Password Input */
+
+.password-container input {
+    width: 100%;
+    padding: 15px 50px 15px 15px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+
+    font-size: 16px;
+
+    box-sizing: border-box;
+}
+
+/* Password Eye Button */
+
+.password-container .password-toggle {
+    position: absolute;
+
+    right: 12px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 35px;
+    height: 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+    color: #64748b;
+
+    border: none;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    padding: 0;
+    margin: 0;
+
+    transition: background-color 0.2s ease,
+                color 0.2s ease;
+}
+
+/* Eye Hover */
+
+.password-container .password-toggle:hover {
+    background-color: #f1f5f9;
+    color: #2563eb;
+}
+
+/* Eye Icon */
+
+.password-container .password-toggle svg {
+    font-size: 18px;
+}
+
+/* Remove default button hover background */
+
+.password-container .password-toggle:focus {
+    outline: none;
+}
+
+/* Password Input Focus */
+
+.password-container input:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+
+
+/* ================= OTP SECTION ================= */
+
+/* OTP input */
+.register-card input[name="otp"] {
+    text-align: center;
+    letter-spacing: 5px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* OTP buttons */
+.register-card button[type="button"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+
+    background-color: #2563eb;
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* OTP button hover */
+.register-card button[type="button"]:hover {
+    background-color: #1d4ed8;
+}
+
+/* Disabled OTP buttons */
+.register-card button[type="button"]:disabled {
+    background-color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Verified email message */
+.register-card .success-message {
+    color: #15803d;
+    background-color: #dcfce7;
+
+    padding: 10px;
+    margin: 10px 0;
+
+    border-radius: 6px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Error message */
+.register-card .error-message {
+    color: #dc2626;
+    background-color: #fee2e2;
+
+    padding: 10px;
+    margin: 10px 0;
+
+    border-radius: 6px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Register button disabled */
+.register-card button[type="submit"]:disabled {
+    background-color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+
+/* Password eye button */
+
+.register-card .password-container {
+    position: relative;
+    width: 100%;
+}
+
+/* Password input */
+
+.register-card .password-container input {
+    width: 100%;
+    padding-right: 50px;
+    box-sizing: border-box;
+}
+
+/* Eye button */
+
+.register-card .password-container button.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 35px !important;
+    height: 35px;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    background: transparent !important;
+    color: #64748b;
+
+    border: none;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+}
+
+/* Eye hover */
+
+.register-card .password-container button.password-toggle:hover {
+    background: #f1f5f9 !important;
+    color: #2563eb;
+}
+
+/* Icon size */
+
+.register-card .password-container button.password-toggle svg {
+    font-size: 18px;
+}

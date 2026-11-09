@@ -10,6 +10,7 @@ import com.careerconnect.backend.service.StudentService;
 import com.careerconnect.backend.dto.StudentLoginDTO;
 import com.careerconnect.backend.service.StudentProfileService;
 import com.careerconnect.backend.service.StudentProfileService;
+import com.careerconnect.backend.service.EmailVerificationService;
 
 @RestController
 @RequestMapping("/auth")
@@ -19,10 +20,23 @@ public class AuthController {
     private StudentService studentService;
     @Autowired
 private StudentProfileService studentProfileService;
+    @Autowired
+private EmailVerificationService emailVerificationService;
+
 
 @PostMapping("/register")
 public ResponseEntity<?> register(@RequestBody Student student) {
+
     try {
+
+        if (!emailVerificationService.isEmailVerified(
+                student.getEmail())) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Please verify your email before registering");
+        }
+
         Student registeredStudent =
                 studentService.registerStudent(student);
 
@@ -41,11 +55,13 @@ public ResponseEntity<?> register(@RequestBody Student student) {
                 .body(registeredStudent);
 
     } catch (RuntimeException e) {
+
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(e.getMessage());
     }
 }
+
 
   @PostMapping("/login")
 public ResponseEntity<?> login(
@@ -70,4 +86,56 @@ public ResponseEntity<?> login(
                 .body(e.getMessage());
     }
 }
+
+  
+@PostMapping("/send-otp")
+public ResponseEntity<?> sendOtp(
+        @RequestParam String email) {
+
+    try {
+
+        if (studentService.getStudents().stream()
+                .anyMatch(student ->
+                        student.getEmail().equalsIgnoreCase(email))) {
+
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Email already registered");
+        }
+
+        String result =
+                emailVerificationService.sendOtp(email);
+
+        return ResponseEntity.ok(result);
+
+    } catch (RuntimeException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+}
+ 
+  
+@PostMapping("/verify-otp")
+public ResponseEntity<?> verifyOtp(
+        @RequestParam String email,
+        @RequestParam String otp) {
+
+    try {
+
+        String result =
+                emailVerificationService.verifyOtp(email, otp);
+
+        return ResponseEntity.ok(result);
+
+    } catch (RuntimeException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+}
+
+
 }

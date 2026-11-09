@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.careerconnect.backend.model.StudentProfile;
 import com.careerconnect.backend.service.ResumeSkillExtractionService;
 import com.careerconnect.backend.service.StudentProfileService;
+import com.careerconnect.backend.service.CareerAnalysisService;
 
 @RestController
 public class ResumeController {
@@ -32,6 +33,9 @@ public class ResumeController {
 
     @Autowired
     private ResumeSkillExtractionService resumeSkillExtractionService;
+
+    @Autowired
+    private CareerAnalysisService careerAnalysisService;
 
     @PostMapping("/student-profiles/{studentId}/resume")
     public ResponseEntity<String> uploadResume(
@@ -55,7 +59,7 @@ public class ResumeController {
                         .body("Only PDF resumes are supported.");
             }
 
-            // Avoid using directory information supplied by the filename.
+            // 2. Validate filename
             String fileName = Paths.get(originalFileName)
                     .getFileName()
                     .toString();
@@ -65,14 +69,14 @@ public class ResumeController {
                         .body("Invalid resume filename.");
             }
 
-            // 2. Create upload directory
+            // 3. Create upload directory
             Path directory = Paths.get(uploadDirectory)
                     .toAbsolutePath()
                     .normalize();
 
             Files.createDirectories(directory);
 
-            // 3. Save PDF
+            // 4. Save PDF
             Path filePath = directory.resolve(fileName)
                     .normalize();
 
@@ -91,7 +95,7 @@ public class ResumeController {
             System.out.println("Saved path: " + filePath);
             System.out.println("File size: " + fileBytes.length);
 
-            // 4. Extract text using PDFBox
+            // 5. Extract text using PDFBox
             String resumeText;
 
             try (PDDocument document = Loader.loadPDF(fileBytes)) {
@@ -110,8 +114,8 @@ public class ResumeController {
 
                 return ResponseEntity.badRequest()
                         .body(
-                            "Could not extract text from the resume. "
-                            + "Please upload a text-based PDF."
+                                "Could not extract text from the resume. "
+                                + "Please upload a text-based PDF."
                         );
             }
 
@@ -121,7 +125,7 @@ public class ResumeController {
                             Math.min(200, resumeText.length())
                     ));
 
-            // 5. Save resume path and extracted text
+            // 6. Save resume path and extracted text
             StudentProfile savedProfile =
                     studentProfileService.updateResume(
                             studentId,
@@ -129,19 +133,22 @@ public class ResumeController {
                             resumeText
                     );
 
-            // 6. Verify that extracted text was saved
+            // 7. Verify resume text was saved
             if (savedProfile.getResumeText() == null ||
                     savedProfile.getResumeText().isBlank()) {
 
                 return ResponseEntity.internalServerError()
-                        .body("Resume text could not be saved in the database.");
+                        .body(
+                                "Resume text could not be saved "
+                                + "in the database."
+                        );
             }
 
             System.out.println("Resume text saved successfully.");
             System.out.println("Saved text length: "
                     + savedProfile.getResumeText().length());
 
-            // 7. Extract and save technical skills
+            // 8. Extract and save technical skills
             StudentProfile profile =
                     resumeSkillExtractionService
                             .extractAndSaveSkills(studentId);
@@ -149,14 +156,23 @@ public class ResumeController {
             String skills = profile.getResumeSkills();
 
             System.out.println("Extracted resume skills: " + skills);
+
+            // 9. Regenerate Career Analysis
+            careerAnalysisService.createAnalysis(studentId);
+
+            System.out.println(
+                    "Career analysis regenerated successfully."
+            );
+
             System.out.println("===================================");
 
-            // 8. Return success response
+            // 10. Return success response
             if (skills == null || skills.trim().isEmpty()) {
 
                 return ResponseEntity.ok(
                         "Resume uploaded and text extracted successfully, "
-                        + "but no known technical skills were detected."
+                        + "but no known technical skills were detected. "
+                        + "Career analysis regenerated."
                 );
             }
 
@@ -164,6 +180,7 @@ public class ResumeController {
                     "Resume uploaded successfully. "
                     + "Text extracted and saved. "
                     + "Detected skills: " + skills
+                    + ". Career analysis regenerated."
             );
 
         } catch (IOException e) {
@@ -172,8 +189,10 @@ public class ResumeController {
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to upload or read the resume: "
-                            + e.getMessage());
+                    .body(
+                            "Failed to upload or read the resume: "
+                                    + e.getMessage()
+                    );
 
         } catch (RuntimeException e) {
 
@@ -181,7 +200,11 @@ public class ResumeController {
 
             return ResponseEntity
                     .badRequest()
-                    .body("Resume upload failed: " + e.getMessage());
+                    .body(
+                            "Resume upload failed: "
+                                    + e.getMessage()
+                    );
         }
     }
 }
+
