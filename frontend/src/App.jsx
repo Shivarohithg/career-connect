@@ -19,6 +19,9 @@ import Navbar from "./components/Navbar/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
+import MockInterview from "./pages/MockInterview";
+import InterviewHistory from "./pages/InterviewHistory";
+
 
 function App() {
 
@@ -138,9 +141,29 @@ function App() {
                     }
                 />
 
+ <Route
+    path="/mock-interview"
+    element={
+        <ProtectedRoute>
+            <MockInterview />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/interview-history"
+    element={
+        <ProtectedRoute>
+            <InterviewHistory />
+        </ProtectedRoute>
+    }
+/>
+
             </Routes>
 
         </BrowserRouter>
+
+        
 
     );
 }

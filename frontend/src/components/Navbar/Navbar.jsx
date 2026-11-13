@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 
@@ -19,9 +20,7 @@ function Navbar() {
     }
 
     const handleLogout = () => {
-
         localStorage.removeItem("student");
-
         navigate("/login");
     };
 
@@ -39,49 +38,67 @@ function Navbar() {
                 <li>
                     <Link to="/">Home</Link>
                 </li>
-{student && (
-    <>
-        <li>
-            <Link to="/dashboard">Dashboard</Link>
-        </li>
 
-        <li>
-            <Link to="/jobs">Jobs</Link>
-        </li>
+                {student && (
+                    <>
 
-        <li>
-            <Link to="/career-analysis">
-                Career Analysis
-            </Link>
-        </li>
+                        <li>
+                            <Link to="/dashboard">
+                                Dashboard
+                            </Link>
+                        </li>
 
-        <li>
-            <Link to="/my-applications">
-                My Applications
-            </Link>
-        </li>
+                        <li>
+                            <Link to="/jobs">
+                                Jobs
+                            </Link>
+                        </li>
 
-        <li>
-            <Link to="/profile">
-                My Profile
-            </Link>
-        </li>
+                        <li>
+                            <Link to="/career-analysis">
+                                Career Analysis
+                            </Link>
+                        </li>
 
-        <li className={styles.welcome}>
-            Welcome, {student.name}
-        </li>
+                        <li>
+                            <Link to="/mock-interview">
+                                Mock Interview
+                            </Link>
+                        </li>
 
-        <li>
-            <button
-                className={styles.logoutButton}
-                onClick={handleLogout}
-            >
-                Logout
-            </button>
-        </li>
-    </>
-)}
-                    
+                        <li>
+    <Link to="/interview-history">
+        Interview History
+    </Link>
+</li>
+
+                        <li>
+                            <Link to="/my-applications">
+                                My Applications
+                            </Link>
+                        </li>
+
+                        <li>
+                            <Link to="/profile">
+                                My Profile
+                            </Link>
+                        </li>
+
+                        <li className={styles.welcome}>
+                            Welcome, {student.name}
+                        </li>
+
+                        <li>
+                            <button
+                                className={styles.logoutButton}
+                                onClick={handleLogout}
+                            >
+                                Logout
+                            </button>
+                        </li>
+
+                    </>
+                )}
 
                 {!student && (
                     <>

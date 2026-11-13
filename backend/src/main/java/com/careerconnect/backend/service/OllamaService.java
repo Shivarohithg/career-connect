@@ -140,6 +140,23 @@ public String generateCareerRoadmap(
     );
 }
 
+
+/*
+ * MOCK INTERVIEW EVALUATION
+ */
+
+public String generateMockInterviewEvaluation(
+        String prompt,
+        String fallback) {
+
+    return generate(
+            prompt,
+            fallback,
+            1200
+    );
+}
+
+
     /*
      * COMMON OLLAMA GENERATION METHOD
      */
@@ -158,7 +175,7 @@ public String generateCareerRoadmap(
             );
 
             Map<String, Object> requestBody = Map.of(
-                    "model", "qwen2.5:0.5b",
+                    "model", "qwen2.5:3b",
                     "prompt", prompt,
                     "stream", false,
                     "keep_alive", "5m",

@@ -136,6 +136,31 @@ function Dashboard() {
             .slice(0, 3)
         : [];
 
+ 
+// Calculate profile completion
+const profileFields = [
+    profile?.student?.name,
+    profile?.student?.branch,
+    profile?.student?.cgpa,
+    profile?.skills,
+    profile?.projects,
+    profile?.githubUsername,
+    profile?.leetcodeUsername,
+    profile?.hackerrankUsername,
+    profile?.resumePath
+];
+
+const completedFields = profileFields.filter(
+    field =>
+        field !== null &&
+        field !== undefined &&
+        String(field).trim() !== ""
+).length;
+
+const profileCompletion = Math.round(
+    (completedFields / profileFields.length) * 100
+);
+
 
     return (
 
@@ -161,6 +186,21 @@ function Dashboard() {
                         Track your career progress, applications and
                         recommendations in one place.
                     </p>
+                    <div className="profile-completion">
+
+    <div className="completion-info">
+        <span>Profile Completion</span>
+        <strong>{profileCompletion}%</strong>
+    </div>
+
+    <div className="completion-track">
+        <div
+            className="completion-fill"
+            style={{ width: `${profileCompletion}%` }}
+        ></div>
+    </div>
+
+</div>
 
                 </div>
 
