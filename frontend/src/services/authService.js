@@ -44,6 +44,55 @@ export const verifyOtp = async (email, otp) => {
     return response.data;
 };
 
+
+// ================= SEND PASSWORD RESET OTP =================
+export const sendPasswordResetOtp = async (email) => {
+    const response = await axios.post(
+        `${API_URL}/forgot-password/send-otp`,
+        null,
+        {
+            params: {
+                email: email
+            }
+        }
+    );
+
+    return response.data;
+};
+
+// ================= VERIFY PASSWORD RESET OTP =================
+export const verifyPasswordResetOtp = async (email, otp) => {
+    const response = await axios.post(
+        `${API_URL}/forgot-password/verify-otp`,
+        null,
+        {
+            params: {
+                email: email,
+                otp: otp
+            }
+        }
+    );
+
+    return response.data;
+};
+
+// ================= RESET PASSWORD =================
+export const resetPassword = async (email, newPassword) => {
+    const response = await axios.post(
+        `${API_URL}/forgot-password/reset`,
+        null,
+        {
+            params: {
+                email: email,
+                newPassword: newPassword
+            }
+        }
+    );
+
+    return response.data;
+};
+
+
 // ================= LOGIN STUDENT =================
 export const loginStudent = async (email, password) => {
     const response = await axios.post(

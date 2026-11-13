@@ -78,3 +78,24 @@
     cursor: pointer;
     font-weight: 600;
 }
+
+
+.forgot-password-link {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+.forgot-password-link span {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.forgot-password-link span:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}

@@ -9,12 +9,16 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.careerconnect.backend.model.Student;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class StudentService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+private PasswordEncoder passwordEncoder;
 
     public List<Student> getStudents() {
         return studentRepository.findAll();
@@ -59,34 +63,54 @@ public class StudentService {
         return studentRepository.save(student);
     }
 
-    // Register new student
-    public Student registerStudent(Student student) {
+// Register new student
+public Student registerStudent(Student student) {
 
-        if (studentRepository.existsByEmail(student.getEmail())) {
-            throw new RuntimeException("Email already registered");
-        }
-
-        return studentRepository.save(student);
+    if (studentRepository.existsByEmail(student.getEmail())) {
+        throw new RuntimeException("Email already registered");
     }
 
-    // Login student
+    // Hash password before saving
+    student.setPassword(
+            passwordEncoder.encode(student.getPassword())
+    );
+
+    return studentRepository.save(student);
+}
+
 // Login student
 public Student loginStudent(String email, String password) {
 
-    System.out.println("LOGIN EMAIL: " + email);
-
     Student student = studentRepository.findByEmail(email)
             .orElseThrow(() ->
-                    new RuntimeException("EMAIL NOT FOUND"));
+                    new RuntimeException("Invalid email or password"));
 
-    System.out.println("STUDENT FOUND: " + student.getEmail());
+    String storedPassword = student.getPassword();
 
-    if (!student.getPassword().equals(password)) {
-        System.out.println("PASSWORD DOES NOT MATCH");
-        throw new RuntimeException("PASSWORD DOES NOT MATCH");
+    // Check whether password is already BCrypt hashed
+    boolean isBCrypt = storedPassword.startsWith("$2a$")
+            || storedPassword.startsWith("$2b$")
+            || storedPassword.startsWith("$2y$");
+
+    if (isBCrypt) {
+
+        // Verify hashed password
+        if (!passwordEncoder.matches(password, storedPassword)) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+    } else {
+
+        // Support existing plain-text accounts temporarily
+        if (!storedPassword.equals(password)) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        // Upgrade old password to BCrypt after successful login
+        student.setPassword(passwordEncoder.encode(password));
+
+        studentRepository.save(student);
     }
-
-    System.out.println("LOGIN SUCCESS");
 
     return student;
 }

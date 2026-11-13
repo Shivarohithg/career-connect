@@ -4,13 +4,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import com.careerconnect.backend.model.Student;
 import com.careerconnect.backend.service.StudentService;
 import com.careerconnect.backend.dto.StudentLoginDTO;
 import com.careerconnect.backend.service.StudentProfileService;
-import com.careerconnect.backend.service.StudentProfileService;
+
 import com.careerconnect.backend.service.EmailVerificationService;
+import com.careerconnect.backend.service.PasswordResetService;
+
+import com.careerconnect.backend.service.PasswordResetService;
 
 @RestController
 @RequestMapping("/auth")
@@ -22,10 +26,13 @@ public class AuthController {
 private StudentProfileService studentProfileService;
     @Autowired
 private EmailVerificationService emailVerificationService;
+@Autowired
+private PasswordResetService passwordResetService;
 
 
 @PostMapping("/register")
-public ResponseEntity<?> register(@RequestBody Student student) {
+public ResponseEntity<?> register(
+        @Valid @RequestBody Student student) {
 
     try {
 
@@ -50,9 +57,17 @@ public ResponseEntity<?> register(@RequestBody Student student) {
                 ""
         );
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(registeredStudent);
+StudentLoginDTO response = new StudentLoginDTO(
+        registeredStudent.getId(),
+        registeredStudent.getName(),
+        registeredStudent.getBranch(),
+        registeredStudent.getCgpa(),
+        registeredStudent.getEmail()
+);
+
+return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .body(response);
 
     } catch (RuntimeException e) {
 
@@ -134,6 +149,56 @@ public ResponseEntity<?> verifyOtp(
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(e.getMessage());
+    }
+}
+
+@PostMapping("/forgot-password/send-otp")
+public ResponseEntity<?> sendPasswordResetOtp(
+        @RequestParam String email) {
+
+    try {
+        String result = passwordResetService.sendResetOtp(email);
+        return ResponseEntity.ok(result);
+
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
+
+@PostMapping("/forgot-password/verify-otp")
+public ResponseEntity<?> verifyPasswordResetOtp(
+        @RequestParam String email,
+        @RequestParam String otp) {
+
+    try {
+        String result =
+                passwordResetService.verifyResetOtp(email, otp);
+
+        return ResponseEntity.ok(result);
+
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
+
+@PostMapping("/forgot-password/reset")
+public ResponseEntity<?> resetPassword(
+        @RequestParam String email,
+        @RequestParam String newPassword) {
+
+    try {
+        if (newPassword == null || newPassword.length() < 8) {
+            return ResponseEntity.badRequest()
+                    .body("Password must contain at least 8 characters");
+        }
+
+        String result =
+                passwordResetService.resetPassword(email, newPassword);
+
+        return ResponseEntity.ok(result);
+
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
 }
 

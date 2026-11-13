@@ -1,5 +1,8 @@
+
 package com.careerconnect.backend.service;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -11,16 +14,17 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String senderEmail;
+
+    // Existing registration OTP email
     public void sendOtp(String recipientEmail, String otp) {
 
         SimpleMailMessage message = new SimpleMailMessage();
 
-        message.setFrom("shivarohithnaidu145@gmail.com");
+        message.setFrom(senderEmail);
         message.setTo(recipientEmail);
-
-        message.setSubject(
-                "CareerConnect AI - Email Verification"
-        );
+        message.setSubject("CareerConnect AI - Email Verification");
 
         message.setText(
                 "Hello,\n\n" +
@@ -31,18 +35,33 @@ public class EmailService {
                 "Regards,\nCareerConnect AI"
         );
 
-        try {
+        mailSender.send(message);
+    }
 
-            mailSender.send(message);
+    // New password reset OTP email
+    public void sendPasswordResetOtp(
+            String recipientEmail,
+            String otp) {
 
-        } catch (MailException e) {
+        SimpleMailMessage message = new SimpleMailMessage();
 
-            System.err.println("GMAIL OTP SENDING FAILED");
-            System.err.println("Error: " + e.getMessage());
+        message.setFrom(senderEmail);
+        message.setTo(recipientEmail);
+        message.setSubject("CareerConnect AI - Password Reset");
 
-            throw e;
-        }
+        message.setText(
+                "Hello,\n\n" +
+                "We received a request to reset your CareerConnect AI password.\n\n" +
+                "Your password reset OTP is: " + otp + "\n\n" +
+                "This OTP is valid for 5 minutes.\n\n" +
+                "If you did not request a password reset, please ignore this email. " +
+                "Your existing password will remain unchanged.\n\n" +
+                "Regards,\nCareerConnect AI"
+        );
+
+        mailSender.send(message);
     }
 }
+
 
 

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginStudent } from "../../services/authService";
@@ -61,6 +62,12 @@ function Login() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
+
+                    <div className="forgot-password-link">
+                        <span onClick={() => navigate("/forgot-password")}>
+                            Forgot Password?
+                        </span>
+                    </div>
 
                     <button type="submit">
                         Login

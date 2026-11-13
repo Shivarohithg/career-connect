@@ -22,6 +22,9 @@ import PublicRoute from "./components/PublicRoute";
 import MockInterview from "./pages/MockInterview";
 import InterviewHistory from "./pages/InterviewHistory";
 
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword/ResetPassword";
+
 
 function App() {
 
@@ -157,6 +160,18 @@ function App() {
             <InterviewHistory />
         </ProtectedRoute>
     }
+/>
+
+{/* Forgot Password */}
+<Route
+    path="/forgot-password"
+    element={<ForgotPassword />}
+/>
+
+{/* Reset Password */}
+<Route
+    path="/reset-password"
+    element={<ResetPassword />}
 />
 
             </Routes>
