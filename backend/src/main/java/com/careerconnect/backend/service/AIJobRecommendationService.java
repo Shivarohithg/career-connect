@@ -1,3 +1,4 @@
+
 package com.careerconnect.backend.service;
 
 import java.util.ArrayList;
@@ -36,57 +37,77 @@ public class AIJobRecommendationService {
     public List<JobRecommendation> recommendJobs(int studentId) {
 
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Student not found"));
 
-        StudentProfile profile = studentProfileRepository.findByStudent(student)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+        StudentProfile profile =
+                studentProfileRepository.findByStudent(student)
+                        .orElseThrow(() ->
+                                new RuntimeException("Profile not found"));
 
-        Set<String> studentSkills = normalizeSkills(profile.getSkills());
-        studentSkills.addAll(normalizeSkills(profile.getResumeSkills()));
+        Set<String> studentSkills =
+                normalizeSkills(profile.getSkills());
+
+        studentSkills.addAll(
+                normalizeSkills(profile.getResumeSkills()));
 
         List<Job> jobs = jobRepository.findAll();
         List<JobRole> roles = jobRoleRepository.findAll();
-        List<JobRecommendation> recommendations = new ArrayList<>();
+
+        List<JobRecommendation> recommendations =
+                new ArrayList<>();
 
         for (Job job : jobs) {
 
-            JobRole matchedRole = findMatchingRole(job, roles);
+            JobRole matchedRole =
+                    findMatchingRole(job, roles);
 
             if (matchedRole == null) {
                 continue;
             }
 
+            // Use actual job requirements
             List<String> requiredSkills =
-                    parseSkills(matchedRole.getRequiredSkills());
+                    parseSkills(job.getRequiredSkills());
 
-            List<String> matchedSkills = new ArrayList<>();
-            List<String> missingSkills = new ArrayList<>();
+                    // Skip jobs without defined skill requirements
+if (requiredSkills.isEmpty()) {
+    continue;
+}
 
-            int totalWeight = 0;
-            int matchedWeight = 0;
+            List<String> matchedSkills =
+                    new ArrayList<>();
 
+            List<String> missingSkills =
+                    new ArrayList<>();
+
+            // Compare student skills with job requirements
             for (String requiredSkill : requiredSkills) {
 
-                int weight = getSkillWeight(
-                        matchedRole.getRoleName(),
-                        requiredSkill);
+                if (studentHasSkill(
+                        studentSkills, requiredSkill)) {
 
-                totalWeight += weight;
-
-                if (studentHasSkill(studentSkills, requiredSkill)) {
                     matchedSkills.add(requiredSkill);
-                    matchedWeight += weight;
+
                 } else {
+
                     missingSkills.add(requiredSkill);
                 }
             }
 
-            int matchPercentage = 0;
+            
 
-            if (totalWeight > 0) {
-                matchPercentage = Math.round(
-                        matchedWeight * 100f / totalWeight);
+            // Calculate skill match percentage
+            int matchPercentage;
+
+            if (requiredSkills.isEmpty()) {
+                continue;
             }
+
+            matchPercentage = Math.round(
+                    matchedSkills.size() * 100f
+                            / requiredSkills.size()
+            );
 
             if (matchPercentage <= 0) {
                 continue;
@@ -106,8 +127,10 @@ public class AIJobRecommendationService {
                             matchedSkills,
                             missingSkills,
                             explanation));
-        }
+                    }
 
+
+        // Sort recommendations by highest match percentage
         recommendations.sort(
                 Comparator.comparingInt(
                         JobRecommendation::getMatchPercentage)
@@ -116,6 +139,7 @@ public class AIJobRecommendationService {
         return recommendations;
     }
 
+    // Find the best matching career role for a job
     private JobRole findMatchingRole(
             Job job,
             List<JobRole> roles) {
@@ -125,6 +149,7 @@ public class AIJobRecommendationService {
         }
 
         String jobTitle = job.getTitle().toLowerCase();
+
         JobRole bestRole = null;
         int bestScore = 0;
 
@@ -134,15 +159,18 @@ public class AIJobRecommendationService {
                 continue;
             }
 
-            String roleName = role.getRoleName().toLowerCase();
+            String roleName =
+                    role.getRoleName().toLowerCase();
+
             String[] words = roleName.split(" ");
+
             int score = 0;
 
             for (String word : words) {
 
-                if (word.length() < 3 ||
-                        word.equals("developer") ||
-                        word.equals("engineer")) {
+                if (word.length() < 3
+                        || word.equals("developer")
+                        || word.equals("engineer")) {
                     continue;
                 }
 
@@ -160,92 +188,39 @@ public class AIJobRecommendationService {
         return bestRole;
     }
 
-    private int getSkillWeight(
-            String roleName,
-            String skill) {
-
-        String role = roleName.toLowerCase();
-        String normalizedSkill = normalizeSkill(skill);
-
-        if (role.contains("java backend")) {
-            if (normalizedSkill.equals("java") ||
-                    normalizedSkill.equals("spring boot") ||
-                    normalizedSkill.equals("sql")) {
-                return 3;
-            }
-            return 1;
-        }
-
-        if (role.contains("full stack")) {
-            if (normalizedSkill.equals("javascript") ||
-                    normalizedSkill.equals("react") ||
-                    normalizedSkill.equals("node.js")) {
-                return 3;
-            }
-            return 1;
-        }
-
-        if (role.contains("frontend")) {
-            if (normalizedSkill.equals("javascript") ||
-                    normalizedSkill.equals("react")) {
-                return 3;
-            }
-            return 1;
-        }
-
-        if (role.contains("python")) {
-            if (normalizedSkill.equals("python") ||
-                    normalizedSkill.equals("sql")) {
-                return 3;
-            }
-            return 1;
-        }
-
-        if (role.contains("software engineer")) {
-            if (normalizedSkill.equals("java") ||
-                    normalizedSkill.equals("dsa") ||
-                    normalizedSkill.equals("oop")) {
-                return 3;
-            }
-            return 1;
-        }
-
-        if (role.contains("data analyst")) {
-            if (normalizedSkill.equals("python") ||
-                    normalizedSkill.equals("sql") ||
-                    normalizedSkill.equals("statistics")) {
-                return 3;
-            }
-            return 1;
-        }
-
-        return 1;
-    }
-
+    // Generate explanation based on the calculated match
     private String generateExplanation(
             int matchPercentage,
             List<String> matchedSkills,
             List<String> missingSkills,
             String roleName) {
 
-        StringBuilder explanation = new StringBuilder();
+        StringBuilder explanation =
+                new StringBuilder();
 
         if (matchPercentage >= 80) {
+
             explanation.append(
                     "Excellent match for the "
                             + roleName
                             + " career direction.");
+
         } else if (matchPercentage >= 60) {
+
             explanation.append(
                     "Strong potential match for the "
                             + roleName
                             + " career direction.");
+
         } else if (matchPercentage >= 40) {
+
             explanation.append(
                     "Good potential match for the "
                             + roleName
                             + " career direction.");
+
         } else {
+
             explanation.append(
                     "This job can help you build "
                             + "skills toward the "
@@ -254,13 +229,22 @@ public class AIJobRecommendationService {
         }
 
         if (!matchedSkills.isEmpty()) {
-            explanation.append(" Your profile matches: ");
-            explanation.append(String.join(", ", matchedSkills));
+
+            explanation.append(
+                    " Your profile matches: ");
+
+            explanation.append(
+                    String.join(", ", matchedSkills));
         }
 
         if (!missingSkills.isEmpty()) {
-            explanation.append(". Focus on improving ");
-            explanation.append(missingSkills.get(0));
+
+            explanation.append(
+                    ". Focus on improving ");
+
+            explanation.append(
+                    missingSkills.get(0));
+
             explanation.append(
                     " to become a stronger candidate.");
         }
@@ -268,6 +252,7 @@ public class AIJobRecommendationService {
         return explanation.toString();
     }
 
+    // Normalize student skills
     private Set<String> normalizeSkills(String skills) {
 
         Set<String> result = new HashSet<>();
@@ -290,6 +275,7 @@ public class AIJobRecommendationService {
         return result;
     }
 
+    // Convert required skills string into a list
     private List<String> parseSkills(String skills) {
 
         List<String> result = new ArrayList<>();
@@ -312,49 +298,52 @@ public class AIJobRecommendationService {
         return result;
     }
 
+    // Check whether the student possesses a required skill
     private boolean studentHasSkill(
             Set<String> studentSkills,
             String requiredSkill) {
 
-        String required = normalizeSkill(requiredSkill);
+        String required =
+                normalizeSkill(requiredSkill);
 
         if (studentSkills.contains(required)) {
             return true;
         }
 
-        if (required.equals("spring") &&
-                studentSkills.contains("spring boot")) {
+        if (required.equals("spring")
+                && studentSkills.contains("spring boot")) {
             return true;
         }
 
-        if (required.equals("spring boot") &&
-                studentSkills.contains("spring")) {
+        if (required.equals("spring boot")
+                && studentSkills.contains("spring")) {
             return true;
         }
 
-        if (required.equals("javascript") &&
-                studentSkills.contains("js")) {
+        if (required.equals("javascript")
+                && studentSkills.contains("js")) {
             return true;
         }
 
-        if (required.equals("react") &&
-                studentSkills.contains("reactjs")) {
+        if (required.equals("react")
+                && studentSkills.contains("reactjs")) {
             return true;
         }
 
-        if (required.equals("rest apis") &&
-                studentSkills.contains("rest")) {
+        if (required.equals("rest apis")
+                && studentSkills.contains("rest")) {
             return true;
         }
 
-        if (required.equals("node.js") &&
-                studentSkills.contains("nodejs")) {
+        if (required.equals("node.js")
+                && studentSkills.contains("nodejs")) {
             return true;
         }
 
         return false;
     }
 
+    // Normalize individual skill names
     private String normalizeSkill(String skill) {
 
         return skill
@@ -363,6 +352,7 @@ public class AIJobRecommendationService {
                 .replaceAll("\\s+", " ");
     }
 
+    // Job recommendation response model
     public static class JobRecommendation {
 
         private Job job;

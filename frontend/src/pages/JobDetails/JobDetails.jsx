@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getJobById } from "../../services/jobService";
@@ -16,6 +17,12 @@ function JobDetails() {
     const [jobAIInsight, setJobAIInsight] = useState("");
     const [jobAIInsightLoading, setJobAIInsightLoading] = useState(true);
     const [jobAIInsightError, setJobAIInsightError] = useState("");
+    const [eligibility, setEligibility] = useState(null);
+    const [eligibilityLoading, setEligibilityLoading] = useState(true);
+    const [eligibilityError, setEligibilityError] = useState("");
+    const [roadmap, setRoadmap] = useState(null);
+    const [roadmapLoading, setRoadmapLoading] = useState(true);
+    const [roadmapError, setRoadmapError] = useState("");
     const [applying, setApplying] = useState(false);
     const [applicationMessage, setApplicationMessage] = useState("");
 
@@ -33,6 +40,84 @@ function JobDetails() {
             }
         };
         loadJob();
+    }, [id]);
+
+    // Load formal eligibility assessment
+    useEffect(() => {
+        const loadEligibility = async () => {
+            try {
+                setEligibilityLoading(true);
+                setEligibilityError("");
+                setEligibility(null);
+
+                const storedStudent = localStorage.getItem("student");
+                if (!storedStudent) {
+                    setEligibilityError("Please login to check your job eligibility.");
+                    return;
+                }
+
+                const student = JSON.parse(storedStudent);
+                if (!student.id || !id) {
+                    setEligibilityError("Student or job information is missing.");
+                    return;
+                }
+
+                const response = await fetch(
+                    `http://localhost:8080/eligibility/${student.id}/${id}`
+                );
+                if (!response.ok) {
+                    throw new Error("Unable to calculate job eligibility.");
+                }
+
+                setEligibility(await response.json());
+            } catch (error) {
+                console.error("Error loading eligibility:", error);
+                setEligibilityError(error.message || "Unable to load eligibility.");
+            } finally {
+                setEligibilityLoading(false);
+            }
+        };
+
+        loadEligibility();
+    }, [id]);
+
+    // Load job-specific learning roadmap
+    useEffect(() => {
+        const loadRoadmap = async () => {
+            try {
+                setRoadmapLoading(true);
+                setRoadmapError("");
+                setRoadmap(null);
+
+                const storedStudent = localStorage.getItem("student");
+                if (!storedStudent) {
+                    setRoadmapError("Please login to view your personalized learning roadmap.");
+                    return;
+                }
+
+                const student = JSON.parse(storedStudent);
+                if (!student.id || !id) {
+                    setRoadmapError("Student or job information is missing.");
+                    return;
+                }
+
+                const response = await fetch(
+                    `http://localhost:8080/learning-roadmap/${student.id}/${id}`
+                );
+                if (!response.ok) {
+                    throw new Error("Unable to generate your learning roadmap.");
+                }
+
+                setRoadmap(await response.json());
+            } catch (error) {
+                console.error("Error loading learning roadmap:", error);
+                setRoadmapError(error.message || "Unable to load learning roadmap.");
+            } finally {
+                setRoadmapLoading(false);
+            }
+        };
+
+        loadRoadmap();
     }, [id]);
 
     useEffect(() => {
@@ -143,6 +228,20 @@ function JobDetails() {
         try {
             setApplying(true);
             setApplicationMessage("");
+
+            if (eligibility && !eligibility.eligible) {
+                setApplicationMessage(
+                    "You do not meet the academic eligibility requirements for this job."
+                );
+                return;
+            }
+
+            if (!eligibility) {
+                setApplicationMessage(
+                    "Eligibility could not be verified. Please try again before applying."
+                );
+                return;
+            }
 
             const storedStudent = localStorage.getItem("student");
 
@@ -276,6 +375,156 @@ function JobDetails() {
                 </div>
 
                 <hr />
+
+                {/* JOB ELIGIBILITY CHECKER */}
+                <section className="eligibility-section">
+                    <div className="eligibility-header">
+                        <div>
+                            <span className="eligibility-label">🎯 CAREERCONNECT ELIGIBILITY CHECK</span>
+                            <h2>Your Job Eligibility</h2>
+                            <p>See how your academic profile and skills match this job.</p>
+                        </div>
+                        {!eligibilityLoading && eligibility && (
+                            <span className={`eligibility-status ${eligibility.eligible ? "eligible" : "not-eligible"}`}>
+                                {eligibility.eligible ? "✓ Eligible" : "✕ Not Eligible"}
+                            </span>
+                        )}
+                    </div>
+
+                    {eligibilityLoading && <div className="eligibility-loading">Analyzing your profile...</div>}
+                    {!eligibilityLoading && eligibilityError && (
+                        <div className="eligibility-error">{eligibilityError}</div>
+                    )}
+                    {!eligibilityLoading && eligibility && (
+                        <>
+                            <div className="eligibility-message">{eligibility.message}</div>
+                            <div className="eligibility-requirements">
+                                <div className="eligibility-requirement-card">
+                                    <div>
+                                        <span>📚 CGPA Requirement</span>
+                                        <strong>{eligibility.studentCgpa} / 10</strong>
+                                        <p>Minimum required: {eligibility.requiredCgpa}</p>
+                                    </div>
+                                    <span className={`requirement-result ${eligibility.cgpaEligible ? "passed" : "failed"}`}>
+                                        {eligibility.cgpaEligible ? "Passed" : "Not Met"}
+                                    </span>
+                                </div>
+                                <div className="eligibility-requirement-card">
+                                    <div>
+                                        <span>🎓 Branch Requirement</span>
+                                        <strong>{eligibility.studentBranch}</strong>
+                                        <p>Accepted: {eligibility.eligibleBranches?.length ? eligibility.eligibleBranches.join(", ") : "All branches"}</p>
+                                    </div>
+                                    <span className={`requirement-result ${eligibility.branchEligible ? "passed" : "failed"}`}>
+                                        {eligibility.branchEligible ? "Passed" : "Not Met"}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="eligibility-skills">
+                                <div className="eligibility-skill-heading">
+                                    <h3>💡 Skill Match Analysis</h3>
+                                    <strong>{eligibility.skillMatchPercentage}%</strong>
+                                </div>
+                                <div className="eligibility-progress">
+                                    <div className="eligibility-progress-fill" style={{ width: `${Math.min(100, Math.max(0, eligibility.skillMatchPercentage || 0))}%` }} />
+                                </div>
+                                <div className="eligibility-skill-summary">
+                                    <span>{eligibility.matchedSkills?.length || 0} Matched</span>
+                                    <span>{eligibility.missingSkills?.length || 0} Missing</span>
+                                </div>
+                                {eligibility.matchedSkills?.length > 0 && (
+                                    <div className="eligibility-skill-group">
+                                        <h4>✓ Matched Skills</h4>
+                                        <div className="eligibility-skill-list">
+                                            {eligibility.matchedSkills.map((skill, index) => <span className="eligibility-skill matched" key={index}>✓ {skill}</span>)}
+                                        </div>
+                                    </div>
+                                )}
+                                {eligibility.missingSkills?.length > 0 && (
+                                    <div className="eligibility-skill-group">
+                                        <h4>⚠ Skills to Improve</h4>
+                                        <div className="eligibility-skill-list">
+                                            {eligibility.missingSkills.map((skill, index) => <span className="eligibility-skill missing" key={index}>+ {skill}</span>)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </section>
+
+                {/* PERSONALIZED LEARNING ROADMAP */}
+                <section className="roadmap-section">
+                    <div className="roadmap-header">
+                        <div>
+                            <span className="roadmap-label">🧭 PERSONALIZED CAREER DEVELOPMENT</span>
+                            <h2>Your Learning Roadmap</h2>
+                            <p>Practical steps to build the skills this job requires.</p>
+                        </div>
+                        {!roadmapLoading && roadmap && (
+                            <span className="roadmap-duration">
+                                {roadmap.estimatedDurationWeeks} {roadmap.estimatedDurationWeeks === 1 ? "week" : "weeks"}
+                            </span>
+                        )}
+                    </div>
+
+                    {roadmapLoading && <div className="roadmap-empty">Preparing your personalized learning roadmap...</div>}
+                    {!roadmapLoading && roadmapError && <div className="roadmap-error">{roadmapError}</div>}
+                    {!roadmapLoading && roadmap && (
+                        <>
+                            <div className="roadmap-match-row">
+                                <span>Current skill match</span>
+                                <strong>{roadmap.currentSkillMatch}%</strong>
+                            </div>
+                            <div className="roadmap-progress-track">
+                                <div className="roadmap-progress-fill" style={{ width: `${Math.min(100, Math.max(0, roadmap.currentSkillMatch || 0))}%` }} />
+                            </div>
+                            {roadmap.matchedSkills?.length > 0 && (
+                                <div className="roadmap-skill-group">
+                                    <h3>✓ Skills you already have</h3>
+                                    <div className="roadmap-skill-list">
+                                        {roadmap.matchedSkills.map((skill, index) => <span className="roadmap-skill matched" key={index}>{skill}</span>)}
+                                    </div>
+                                </div>
+                            )}
+                            {roadmap.missingSkills?.length === 0 ? (
+                                <div className="roadmap-complete">
+                                    <strong>🎉 You're all caught up!</strong>
+                                    <p>Your profile currently includes all the skills listed for this job. Keep practising and building projects to strengthen your experience.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="roadmap-skill-group">
+                                        <h3>Skills to develop</h3>
+                                        <div className="roadmap-skill-list">
+                                            {roadmap.missingSkills.map((skill, index) => <span className="roadmap-skill missing" key={index}>{skill}</span>)}
+                                        </div>
+                                    </div>
+                                    <div className="roadmap-plans">
+                                        {roadmap.learningPlan?.map((plan, index) => (
+                                            <article className="roadmap-plan-card" key={`${plan.skill}-${index}`}>
+                                                <div className="roadmap-plan-top">
+                                                    <div>
+                                                        <span className="roadmap-step-label">SKILL {index + 1}</span>
+                                                        <h3>{plan.skill}</h3>
+                                                    </div>
+                                                    <div className="roadmap-plan-meta">
+                                                        <span className="roadmap-priority">{plan.priority} priority</span>
+                                                        <span>{plan.estimatedWeeks} weeks</span>
+                                                    </div>
+                                                </div>
+                                                <ol className="roadmap-steps">
+                                                    {plan.learningSteps?.map((step, stepIndex) => <li key={stepIndex}>{step}</li>)}
+                                                </ol>
+                                            </article>
+                                        ))}
+                                    </div>
+                                    <p className="roadmap-disclaimer">Duration estimates are planning guides. Actual learning time depends on your prior experience and practice.</p>
+                                </>
+                            )}
+                        </>
+                    )}
+                </section>
 
                 {!aiLoading && aiRecommendation && (
                     <section className="job-ai-section">
@@ -418,9 +667,9 @@ function JobDetails() {
                 <button
                     className="apply-button"
                     onClick={handleApply}
-                    disabled={applying}
+                    disabled={applying || eligibilityLoading || !eligibility || !eligibility.eligible}
                 >
-                    {applying ? "Applying..." : "Apply Now"}
+                    {applying ? "Applying..." : eligibility && !eligibility.eligible ? "Not Eligible to Apply" : "Apply Now"}
                 </button>
 
                 {applicationMessage && (
